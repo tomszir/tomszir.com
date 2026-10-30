@@ -9,6 +9,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* No browser tap flash; the :active states below give touch feedback in the site's colours. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 html[data-menu-open] {
@@ -121,8 +123,10 @@ button {
 
 .link:hover,
 .link:focus-visible,
+.link:active,
 .prose a:hover,
-.prose a:focus-visible {
+.prose a:focus-visible,
+.prose a:active {
   text-decoration-thickness: 2.5px;
 }
 
@@ -204,6 +208,7 @@ button {
 }
 
 .button:active {
+  background: var(--raised);
   transform: translateY(1px);
 }
 
@@ -232,7 +237,8 @@ button {
 }
 
 a.panel:hover,
-a.panel:focus-visible {
+a.panel:focus-visible,
+a.panel:active {
   background: var(--raised);
 }
 
@@ -267,7 +273,8 @@ a.panel:focus-visible .panel-arrow {
 }
 
 a.row:hover,
-a.row:focus-visible {
+a.row:focus-visible,
+a.row:active {
   background: var(--raised);
 }
 
