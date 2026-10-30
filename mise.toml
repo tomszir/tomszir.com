@@ -4,7 +4,7 @@ pnpm = "12.16.1"
 
 [tasks.check]
 description = "Type-check, lint, build, and check the built output"
-run = ["pnpm astro check", "pnpm biome check .", "pnpm build", "node scripts/check-dist.mjs"]
+run = ["pnpm astro check", "pnpm biome check .", "pnpm build"]
 
 [tasks."icons:vendor"]
 description = "Re-vendor pinned icons from vendor/icons.lock.json"

@@ -34,6 +34,8 @@ Before calling anything done:
 mise run check    # type check, Biome, build, stamp, check-dist
 ```
 
+GitHub Actions runs the same check on every push and pull request. Cloudflare builds and deploys every push to `main` itself, and since `check-dist` is part of `pnpm build`, a page that breaks a rule fails that build and never goes live.
+
 Also useful:
 
 | Command                      | Does                                                              |
