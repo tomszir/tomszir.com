@@ -12,7 +12,9 @@ interface Props {
 
 const { title, description = site.description } = Astro.props
 const pageTitle = title ? `${title} · ${site.name}` : site.name
-const canonical = new URL(Astro.url.pathname, Astro.site)
+// Pages are built as files (`/cv.html`) but served without the extension, and the .html
+// address redirects, so the canonical URL drops it.
+const canonical = new URL(Astro.url.pathname.replace(/(index)?\.html$/, ''), Astro.site)
 ---
 
 <!doctype html>

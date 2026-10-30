@@ -1,4 +1,5 @@
-// Checks the built site in dist/: every page has a language, a title, a description and one h1;
+// Checks the built site in dist/: every page has a language, a title, a description, one h1 and
+// a canonical URL without .html (that address redirects);
 // no page loads a resource from another origin; the home page's HTML, CSS and JavaScript fit in
 // 14 KB compressed, the first round trip of a new connection. Fonts are counted separately.
 // Placeholders ([LIKE THIS]) are reported as warnings until they're filled.
@@ -63,6 +64,9 @@ for (const file of all.filter((path) => path.endsWith('.html'))) {
   }
   const h1s = html.match(/<h1\b/gi)?.length ?? 0
   if (h1s !== 1) errors.push(`${page}: ${h1s} h1 elements, expected 1`)
+  const canonical = html.match(/<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i)?.[1]
+  if (!canonical) errors.push(`${page}: no canonical URL`)
+  else if (canonical.endsWith('.html')) errors.push(`${page}: canonical ${canonical} redirects`)
 
   for (const url of resources(html)) {
     if (isForeign(url)) errors.push(`${page}: loads ${url} from another origin`)
