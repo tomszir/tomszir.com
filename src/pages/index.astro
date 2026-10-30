@@ -81,7 +81,11 @@ const [main, side] = products
         <span class="meta muted">Last build</span>
         <span class="value">
           <span class="value-large"><data data-build="date" value="">–</data></span>
-          <span class="meta muted">from <data class="commit" data-build="commit" value="">–</data></span>
+          <span class="meta muted"
+            >from <a class="link commit" href={`${site.source}/commits/main`} data-build-link="commit"
+              ><data data-build="commit" value="">–</data></a
+            ></span
+          >
         </span>
       </div>
     </section>

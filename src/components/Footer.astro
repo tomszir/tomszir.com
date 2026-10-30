@@ -11,12 +11,16 @@ import Icon from './Icon.astro'
   </div>
   <div class="build meta muted">
     <p>
-      Built <data data-build="date" value="">–</data> from <data
-        data-build="commit"
-        value="">–</data
+      Built <data data-build="date" value="">–</data> from <a
+        class="link"
+        href={`${site.source}/commits/main`}
+        data-build-link="commit"><data data-build="commit" value="">–</data></a
       > · <data data-build="page-kb" value="">–</data> KB
     </p>
-    <p>Every number here is measured at build time or computed in your browser.</p>
+    <p>
+      Every number here is measured at build time or computed in your browser.{' '}
+      <a class="link" href={site.source}>Source</a>
+    </p>
   </div>
 </footer>
 

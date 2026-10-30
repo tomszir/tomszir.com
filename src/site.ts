@@ -9,6 +9,8 @@ export const site = {
     'Toms Zvirbulis, software developer in Latvia. Building Team Up and Zvirb, and writing about how software is made.',
   email: 'tomszir@proton.me',
   github: 'https://github.com/tomszir',
+  /** This site's repository; the build links its commit stamps to commits here. */
+  source: 'https://github.com/tomszir/tomszir.com',
   timeZone: 'Europe/Riga',
   place: 'Latvia',
   facts: [

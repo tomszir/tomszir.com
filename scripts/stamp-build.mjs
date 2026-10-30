@@ -50,6 +50,12 @@ const fill = (html, name, value) =>
     (_, open, close) => `${open.replace(/value="[^"]*"/, `value="${value}"`)}${value}${close}`,
   )
 
+/** Points the links around a commit stamp at that commit; they link to the branch until then. */
+const linkCommit = (html, sha) =>
+  html.replace(/<a\b[^>]*data-build-link="commit"[^>]*>/g, (tag) =>
+    tag.replace(/href="([^"]*)\/commits\/main"/, `href="$1/commit/${sha}"`),
+  )
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const now = new Date()
   const facts = {
@@ -66,6 +72,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     let html = readFileSync(file, 'utf8')
     if (!html.includes('data-build=')) continue
     html = fill(html, 'commit', facts.commit)
+    if (facts.commit !== 'uncommitted') html = linkCommit(html, facts.commit)
     html = fill(html, 'date', facts.date)
     // Writing the size in changes the size; a second pass settles it.
     for (let pass = 0; pass < 2; pass++) {
