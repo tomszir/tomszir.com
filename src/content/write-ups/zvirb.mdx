@@ -1,0 +1,87 @@
+---
+product: zvirb
+---
+
+
+import Decision from '../../components/write-up/Decision.astro'
+import Flow from '../../components/write-up/Flow.astro'
+
+## Why
+
+Running a game server for friends should be a weekend's setup, not a second job. The other options felt heavy and hard to set up. I wanted something modern, performant and easy to extend: a panel I could run on my own machines, where support for a game is a plugin anyone can write and install without a restart, and where that plugin can't reach anything it hasn't asked for.
+
+## How it fits together
+
+There are two Go binaries. The API serves the web client and owns accounts, nodes, instances and plugins. A daemon runs on every machine that hosts game servers: it runs the containers, the files, the console and the metrics, and it never runs a plugin.
+
+<Flow
+  caption="The two binaries, and where plugins run."
+  links={['HTTP, WebSocket', 'Connect over HTTP/2']}
+  steps={[
+    { title: 'Web client', note: 'React, with React Aria components. Its API types are generated from the OpenAPI schema.' },
+    { title: 'API', note: 'Go. Accounts, nodes, instances, and the plugin host.', focus: true },
+    { title: 'Daemon', note: 'Go, one per node. Containers, files, the console and metrics. Never runs plugins.' },
+  ]}
+/>
+
+The API calls the daemon, never the other way round, and browsers never reach a daemon at all: the console you see in the browser is the daemon's stream, relayed by the API over a WebSocket. The protocol between them is protobuf with Connect, and `buf` checks every change for lint and for breaking changes. The `.proto` files are the source of truth.
+
+## Plugins in a sandbox
+
+Support for each game is a plugin, and the plugin model decided the whole stack. A plugin is a WebAssembly module, run by the API through Extism on wazero, which is pure Go with no cgo. It can only do what the host grants it through host functions: HTTP to the hosts its manifest declares, its own storage, logging, and schedules.
+
+<Decision
+  chosen="Go, with plugins as WebAssembly modules"
+  instead="Java and Spring with jar plugins, Rust with Wasm components, or gRPC plugin processes"
+>
+  A third-party jar runs with the host's full rights, and a JVM daemon costs a couple of hundred
+  megabytes on every node. Wasm components with WIT have the strongest typing but were the slowest
+  to build on, with runtimes and toolchains still landing. A gRPC plugin is a native binary per
+  platform with full process rights.
+</Decision>
+
+Every call gets a fresh instance, so one call can never see another's state. That sounds expensive, but instantiation measured about 0.6 ms of a 0.8 ms call. Each call also runs under limits, and these are the defaults:
+
+| Limit | Default |
+| --- | --- |
+| Deadline per call | 2 s |
+| Memory per call | 24 MiB |
+| Input and output per call | 1 MiB each |
+| Calls in flight, across the host | 16 |
+| Module size | 32 MiB |
+| HTTP per request | 10 s, 1 MiB response |
+| HTTP requests per call | 16 |
+| Shortest schedule interval | 1 minute |
+
+A plugin describes itself in a `zvirb-plugin.json` manifest. The smallest one, from the host's tests:
+
+```json
+{ "id": "logger", "version": "0.1.0", "pdk": "^0.1" }
+```
+
+<Decision chosen="Extism, behind one file" instead="wazero with our own ABI">
+  A spike tested Extism against every sandbox requirement under `go test -race`, and it held. Only
+  one file imports it, so moving to plain wazero later means rewriting that file and nothing else.
+</Decision>
+
+## Plugins describe, Zvirb renders
+
+A plugin never ships JavaScript to the page. It describes its screens as views, and the web client renders them from a view schema, a JSON Schema that's also the source of truth for the plugin kit and the TypeScript types. That's where the rule comes from that the web client has no game-specific code at all.
+
+## Where it is
+
+The first release has eight stages, and four are done: the foundation, the daemon and its protocol, the design system, and the API core. Working today, end to end:
+
+- Sign-in with a password and TOTP, recovery codes, a forced password change, and access per permission.
+- Registering a node from the UI, after the API checks that the node answers.
+- A live console in the browser: recent output on connect, then live output, and commands back.
+- A daemon that provisions a container from a checksummed download, keeps every file operation inside the instance, and reports CPU and memory per container and for the host.
+- The plugin host, with its limits, HTTP, storage and schedules.
+
+Not yet: creating and playing a game server from the UI, plugin views in the app, the plugin registry, and a one-command install.
+
+Six repositories, each with its own checks and releases. The Go is checked with a strict `golangci-lint`, `go vet`, `govulncheck` and `go test -race`.
+
+## What's next
+
+The plugin kit and the view schema are being built now. After them come the Minecraft: Java plugin, a plugin registry, and the first release: one compose file that gives you a running Minecraft server, managed from Zvirb.

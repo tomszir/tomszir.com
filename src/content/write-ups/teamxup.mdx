@@ -1,0 +1,63 @@
+---
+product: teamxup
+---
+
+
+
+## Why
+
+Plenty of things are better done with other people: a five-a-side game, a hike, a book club. The hard part is finding the people. Team Up is a social app built around that: you find a team for an activity, or start one, and plan it together.
+
+## What it does
+
+You sign up with an email, Google or Apple account and find or create a team. A team has a description, members and its own messages, and activities are planned and scheduled inside it. Community forums sit alongside the teams, and with location turned on the app can show teams nearby.
+
+## What I work on
+
+I build the app in Expo, and work on the .NET backend when a new feature needs it.
+
+Before the redesign, the app was a mess. Everyone wrote their own styles and came up with their own component concepts, so everything felt uneven and out of place. It was sterile.
+
+The design system started from one idea: tokens and base components are everything the app is. Every view and every component comes from those fundamentals.
+
+On mobile it's hard to see every screen and every component quickly, since the emulator takes a while to load the newest changes. So the plan was to use Storybook as the live preview of what actually exists. That's where the problem came in: the screens were too coupled to the data layer, and Storybook couldn't load a component that depends on data from an API. That's where the split came from. I rewrote the whole front end on TanStack Router, and every route is now three layers:
+
+- **Page:** the route. It reads the params and renders a screen.
+- **Screen:** the data. It runs the React Query queries and mutations, and handles loading and errors.
+- **View:** a plain component. It takes the data as props and reports what the user did through callbacks, with no fetching of its own.
+
+A sketch of the split, for a team's page:
+
+```tsx
+// The page: the route and its params, nothing else.
+export const Route = createFileRoute('/teams/$teamId')({ component: TeamPage })
+
+function TeamPage() {
+  const { teamId } = Route.useParams()
+  return <TeamScreen teamId={teamId} />
+}
+
+// The screen: queries, mutations, loading and errors.
+function TeamScreen({ teamId }: { teamId: string }) {
+  const team = useQuery(teamQuery(teamId))
+  const join = useMutation(joinTeamMutation(teamId))
+  if (!team.data) return <Loading />
+  return <TeamView team={team.data} onJoin={() => join.mutate()} />
+}
+
+// The view: data in, callbacks out.
+function TeamView({ team, onJoin }: { team: Team; onJoin: () => void }) {
+  return (
+    <Card>
+      <Title>{team.name}</Title>
+      <Button onPress={onJoin}>Join</Button>
+    </Card>
+  )
+}
+```
+
+Now Storybook runs for both native and web, and every screen and every component is in it. Working on component design got way easier.
+
+## What's next
+
+Team Up is in internal testing. We're planning to release soon, once we iron out a few kinks.

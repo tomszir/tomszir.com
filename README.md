@@ -12,7 +12,7 @@ Most of the work happens at build time:
 2. `scripts/stamp-build.mjs` measures each page, gzipped together with the CSS and JS it loads, and writes the size, the build date and the commit into it. That's where the numbers on the home page and in the footer come from.
 3. `scripts/check-dist.mjs` reads every built page and fails if one is missing a `lang`, a title, a description or a single `h1`, if anything loads from another origin, if the home page goes over 14 KB compressed, or if a printed size is more than 0.1 KB off the real one.
 
-The 14 KB budget is roughly what fits in the first round trip of a new connection. The home page is at about 11.5 KB.
+The 14 KB budget is roughly what fits in the first round trip of a new connection. The home page is at about 11.7 KB.
 
 Every page works with JavaScript off. The scripts that exist only add to it: the theme set before first paint, the theme toggle, the clock and the sun's elevation over Riga, the moving highlight in lists and the nav, the sticky header, the phone menu and the copy buttons. Page-to-page animation is plain CSS view transitions, not a client-side router.
 

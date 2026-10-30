@@ -1,0 +1,236 @@
+---
+title: How this site is built
+description: The stack behind tomszir.com, why each piece is there, and the 14 KB budget it has to fit in.
+published: 2026-10-30
+---
+
+import Decision from '../../components/write-up/Decision.astro'
+import Flow from '../../components/write-up/Flow.astro'
+
+I wanted a personal site that shows I understand what I'm doing, not another generic portfolio. This is it: eight pages of HTML, one stylesheet and one script file. Nothing runs on a server when you load it. I wanted most of the work to happen at build time, and I wanted the build to check its own output before anything is deployed.
+
+## A static site, on purpose
+
+I built it with Astro 7.4.4, and the output is plain static files. There's no server rendering, no database and no API. The pages only change when I write something, which is a few times a month at best. Rendering them per request would just add a server to keep alive and a cold start to wait for.
+
+Astro treats JavaScript as opt-in, which is what I wanted. A component renders to HTML when the site builds, and nothing ships to the browser unless I write a `<script>` for it. The home page loads seven files on a first visit: the HTML, one stylesheet, one script of 1.1 KB compressed, and four small font files.
+
+<Decision
+  chosen="Cross-document view transitions in CSS"
+  instead="Astro's ClientRouter, which turns the site into a single-page app"
+>
+  I didn't want to ship a router to every page to animate between eight of them, and every inline
+  script would need care to rerun after navigation. `@view-transition` gives the page-to-page animation
+  from real page loads in browsers that support it. In the others, links navigate without it.
+</Decision>
+
+So the whole router is three lines of CSS, behind the reduced-motion preference:
+
+```css
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+```
+
+## Hosting: static assets on Cloudflare Workers
+
+My domain was already on Cloudflare, so the files go to Workers static assets. There's no Worker script at all, just a `dist/` folder and this config. Cloudflare builds and deploys every push to `main` on its own, so deploying is `git push`:
+
+```jsonc
+{
+  "name": "tomszir-com",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    "html_handling": "drop-trailing-slash"
+  }
+}
+```
+
+Astro writes each page as a file (`/cv` is `cv.html`) and Workers serves it without the extension. Unknown paths get the real 404 page with a 404 status. A `_headers` file in `public/` caches the hashed files under `/_astro/` for a year as immutable, since their names change whenever their content does:
+
+```text
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+```
+
+I didn't use the Astro Cloudflare adapter. It's for on-demand rendering, and this site doesn't do any.
+
+## The 14 KB budget
+
+TCP starts a new connection with a congestion window of ten segments. That works out to about 14 KB before the server has to wait for an acknowledgement. TLS and HTTP/3 change the details, so it's a rule of thumb, not a guarantee.
+
+The home page's HTML is 6.9 KB compressed, so it arrives in that first window. The stylesheet and script follow in one more round trip, in parallel. I applied the rule of thumb to all three: 14 KB compressed for the HTML, CSS and JavaScript, fonts aside.
+
+The home page currently weighs 11.7 KB. Two scripts measure it again after every build:
+
+<Flow
+  caption="What runs on every build, and on every push."
+  links={['dist/', '', 'only if every check passes']}
+  steps={[
+    { title: 'astro build', note: 'Renders the pages, bundles the styles and downloads the fonts into dist/.' },
+    { title: 'stamp-build', note: 'Measures each page compressed and writes the size, date and commit in.', focus: true },
+    { title: 'check-dist', note: 'Fails the build if a page breaks a rule or the home page passes 14 KB.' },
+    { title: 'Cloudflare deploy', note: 'Uploads dist/ as static assets on every push to main. No Worker script.' },
+  ]}
+/>
+
+`stamp-build` gzips each page together with the stylesheet and script it loads, then writes the size into the page, along with the build date and the commit. That's where the numbers in the footer come from. Browsers that support Brotli get something smaller, so gzip is the safe number to measure.
+
+Writing the size into the page also changes the page's size, which I found out the hard way: the first version of the stamp printed 10.9 KB on a page that weighed 10.8. That's where the second pass came from. The first pass writes a size, the second measures again with it in place and settles it:
+
+```js
+for (let pass = 0; pass < 2; pass++) {
+  const kb = (pageBytes(html) / 1024).toFixed(1)
+  const percent = Math.min(100, (Number(kb) / BUDGET_KB) * 100).toFixed(0)
+  html = fill(html, 'page-kb', kb).replace(
+    /(data-build-fill[^>]*style=["']--fill:\s*)[^;"']*/g,
+    `$1${percent}%`,
+  )
+}
+```
+
+`check-dist` then reads every page in `dist/` and fails the build when any of these happen. It's part of `pnpm build`, so a failing check stops Cloudflare's build too, and the broken version never goes live:
+
+- a page has no `lang`, no title, no description, or more than one `h1`
+- anything loads from another origin
+- the home page goes over 14 KB
+- a printed size is more than 0.1 KB off the real one
+
+That last rule is how the first bug showed up.
+
+## Fonts without a third party
+
+The site uses Inter Tight and JetBrains Mono. A Google Fonts `<link>` would be a request to another company on every page view, and I didn't want that, so the fonts live in the repository. They come from the Fontsource packages, pinned by version and checksum in `vendor/fonts.lock.json`, and `mise run fonts:vendor` downloads them and cuts each family down to the characters the site actually uses. Each family becomes two files: one with ASCII and a handful of symbols (arrows, quotes, dashes), one with the Latvian letters. That took the fonts from 75 KB to 48 KB.
+
+Astro's font API serves them from the site and sizes the fallback fonts to match, so the page doesn't jump when the real ones arrive. Each family is one entry in `astro.config.mjs`, with a variant per file:
+
+```js
+const variants = (family, weight) =>
+  Object.entries(subsets).map(([subset, text]) => ({
+    src: [`./src/fonts/${family}-${subset}.woff2`],
+    weight,
+    style: 'normal',
+    unicodeRange: unicodeRange(text),
+  }))
+
+{
+  provider: fontProviders.local(),
+  name: 'Inter Tight',
+  cssVariable: '--font-sans',
+  fallbacks: ['system-ui', 'sans-serif'],
+  options: { variants: variants('inter-tight', '400 600') },
+}
+```
+
+The vendoring script and the config read the same character sets, so the files and their `unicode-range` can't disagree. A character that isn't in them falls back to the system font, one character at a time, instead of breaking the line. With fonts, a first visit to the home page is about 60 KB in seven requests.
+
+## JavaScript only where it earns it
+
+Every page works with JavaScript off. The scripts only add to a page that's already complete:
+
+- A theme script inlined in the `<head>`, so a stored or system dark theme is applied before the first paint instead of flashing light. Without JavaScript the site follows the system theme.
+- The theme toggle, which uses `document.startViewTransition` to reveal the new theme from the button. Without JavaScript there's no toggle.
+- A clock and the sun's elevation over Riga, computed in the browser from the date. Without JavaScript the panel says Latvia.
+
+The theme switch was out of sync at first. The new theme is revealed as a growing circle, but every element with a colour transition kept fading at its own speed inside it, and the elements with view-transition names were animated separately, outside the circle. That's where this rule came from. While the switch runs, both are turned off:
+
+```css
+:root[data-theme-switching] *,
+:root[data-theme-switching] *::before,
+:root[data-theme-switching] *::after {
+  transition: none !important;
+  view-transition-name: none !important;
+}
+```
+
+The sun's elevation is the standard low-precision solar position, good to about a degree, in 18 lines:
+
+```ts
+function sunElevation(date: Date): number {
+  const days = date.getTime() / 86_400_000 - 10_957.5
+  const anomaly = (357.529 + 0.98560028 * days) * RAD
+  const meanLongitude = 280.459 + 0.98564736 * days
+  const longitude = (meanLongitude + 1.915 * Math.sin(anomaly) + 0.02 * Math.sin(2 * anomaly)) * RAD
+  const obliquity = (23.439 - 0.00000036 * days) * RAD
+  const rightAscension = Math.atan2(Math.cos(obliquity) * Math.sin(longitude), Math.cos(longitude))
+  const declination = Math.asin(Math.sin(obliquity) * Math.sin(longitude))
+  const siderealHours = (18.697374558 + 24.06570982441908 * days) % 24
+  const hourAngle = (siderealHours * 15 + LONGITUDE) * RAD - rightAscension
+  const latitude = LATITUDE * RAD
+  return (
+    Math.asin(
+      Math.sin(latitude) * Math.sin(declination) +
+        Math.cos(latitude) * Math.cos(declination) * Math.cos(hourAngle),
+    ) / RAD
+  )
+}
+```
+
+These, and a few smaller ones, are small enough that Astro inlines them into the page: 5.8 KB in all, 2.2 KB compressed, counted inside the 11.7 KB. The one script file is Astro's link prefetching, 2.4 KB and 1.1 KB compressed. It fetches a page when you hover or touch a link to it.
+
+## Content as data
+
+Posts and product pages are Markdown and MDX files with frontmatter checked against Zod schemas, so a post with a missing date doesn't build. The schema for posts, in `src/content.config.ts`:
+
+```ts
+const writing = defineCollection({
+  loader: glob({ base: './src/content/writing', pattern: '**/*.{md,mdx}' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    published: z.coerce.date(),
+    updated: z.coerce.date().optional(),
+    draft: z.boolean().default(false),
+  }),
+})
+```
+
+The decision blocks and the diagram in this post are components, imported at the top of the file. This is how the post starts, and how the Biome decision below is written:
+
+```mdx
+---
+title: How this site is built
+description: The stack behind tomszir.com, why each piece is there, and the 14 KB budget it has to fit in.
+published: 2026-10-30
+---
+
+import Decision from '../../components/write-up/Decision.astro'
+
+<Decision chosen="Biome for linting and formatting" instead="ESLint and Prettier">
+  One tool, one config file and one fast binary for TypeScript, CSS, JSON and Markdown.
+</Decision>
+```
+
+## Tooling, pinned
+
+`mise` pins Node 24 and pnpm 12.16.1, so the toolchain is the same on any machine that runs `mise install`. Every dependency is an exact version, and pnpm runs install scripts for only two packages, esbuild and workerd. Both rules live in `pnpm-workspace.yaml`:
+
+```yaml
+savePrefix: ""
+
+allowBuilds:
+  esbuild: true
+  workerd: true
+```
+
+TypeScript is at 6.0.3, not 7, because `@astrojs/check` doesn't support 7 yet. One command, `mise run check`, runs the type check, Biome, the build, the stamp and `check-dist`. Nothing counts as done until it passes.
+
+<Decision chosen="Biome for linting and formatting" instead="ESLint and Prettier">
+  One tool, one config file and one fast binary for TypeScript, CSS, JSON and Markdown. It can't
+  see inside Astro templates, so two of its rules are off for `.astro` files.
+</Decision>
+
+## What's next
+
+The site is ready for writing. The next posts are about the two projects I'm building alongside my work.
+
+[Zvirb](/building/zvirb) is a self-hosted game server panel. I'm working toward a first release where one compose file gives you a running Minecraft server. Support for each game is a WebAssembly plugin, and a plugin registry is planned to install them from. The host runs every call to a plugin under a deadline and a memory budget. That sandbox is the first thing I want to write about.
+
+Seams is newer. It's one shared, pannable quilt: people claim a few cells and write a small Canvas program for them. Every visible cell animates live, and neighbouring cells can talk across their shared edges.
+
+The backend is Rust with axum and Postgres. The grid logic is one Rust crate, compiled to native code and to WebAssembly. The quilt itself is a hand-written WebGL2 renderer, with budgets of its own: 60 fps with 64 live cells on screen, and under 150 KB of JavaScript, gzipped, for the first view. The renderer works. Next is running other people's code safely, in sandboxed cross-origin iframes with CPU, memory and frame-time limits.
+
+None of it is finished, and this site won't be either. It's the place I'll write about both as they get there.
