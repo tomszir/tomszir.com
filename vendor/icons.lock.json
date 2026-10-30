@@ -1,0 +1,34 @@
+{
+  "sources": {
+    "lucide": {
+      "package": "lucide-static",
+      "version": "1.60.0",
+      "integrity": "sha512-Y8/IYjBYST40TuqzknGt1XJOcZp83UH5fLndgXlQCQ4lM97eZO3EQo6cIyDcBrprredIGDVxge8yslRyM4wD0Q==",
+      "path": "icons/{icon}.svg",
+      "license": "LICENSE",
+      "style": "stroke"
+    },
+    "simple-icons": {
+      "package": "simple-icons",
+      "version": "16.35.0",
+      "integrity": "sha512-TCfl/2+GTrx0nCo4pEWGvxhOb8c6NsqOU1OpwjtF4lwJAthB8IYVD0fuIMjLMg6JFuG1YBO0t1iETQqJLqkoJA==",
+      "path": "icons/{icon}.svg",
+      "license": "LICENSE.md",
+      "style": "fill"
+    }
+  },
+  "icons": [
+    { "name": "sun", "source": "lucide" },
+    { "name": "moon", "source": "lucide" },
+    { "name": "menu", "source": "lucide" },
+    { "name": "x", "source": "lucide" },
+    { "name": "arrow-right", "source": "lucide" },
+    { "name": "arrow-up-right", "source": "lucide" },
+    { "name": "copy", "source": "lucide" },
+    { "name": "check", "source": "lucide" },
+    { "name": "rss", "source": "lucide" },
+    { "name": "mail", "source": "lucide" },
+    { "name": "printer", "source": "lucide" },
+    { "name": "github", "source": "simple-icons" }
+  ]
+}

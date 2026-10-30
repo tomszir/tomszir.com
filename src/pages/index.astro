@@ -1,0 +1,243 @@
+---
+import Icon from '../components/Icon.astro'
+import PostList from '../components/PostList.astro'
+import ProductPanel from '../components/ProductPanel.astro'
+import Base from '../layouts/Base.astro'
+import { formatDate, getPosts, readingMinutes } from '../lib/posts'
+import { getProducts } from '../lib/products'
+import { site } from '../site'
+
+const [posts, products] = await Promise.all([getPosts(), getProducts()])
+const [latest] = posts
+const [main, side] = products
+---
+
+<Base>
+  <div class="container">
+    <section class="hero" aria-labelledby="name">
+      <h1 id="name" class="name">
+        <span class="line"><span>{site.name}<span class="stop" aria-hidden="true"></span></span></span>
+      </h1>
+      <p class="lede intro">
+        I build software and care about how it's made. Developer in Latvia, writing code since I
+        was ten and for a living for five years. Here's what's true right now.
+      </p>
+    </section>
+
+    <section class="now" aria-label="Now">
+      {main && <ProductPanel product={main} label="Now building" />}
+      {side && <ProductPanel product={side} label="On the side" />}
+      {
+        latest ? (
+          <a class="panel" href={`/writing/${latest.id}`}>
+            <span class="meta muted">Latest post</span>
+            <Icon name="arrow-right" size={16} class="panel-arrow" />
+            <span class="value">
+              <span class="value-small">{latest.data.title}</span>
+              <span class="meta muted">
+                {formatDate(latest.data.published)} · {readingMinutes(latest)} min
+              </span>
+            </span>
+          </a>
+        ) : (
+          <a class="panel" href="/writing">
+            <span class="meta muted">Latest post</span>
+            <Icon name="arrow-right" size={16} class="panel-arrow" />
+            <span class="value">
+              <span class="value-small">The first post is on its way.</span>
+              <span class="meta muted">Subscribe via RSS to get it</span>
+            </span>
+          </a>
+        )
+      }
+      <div class="panel">
+        <span class="meta muted">Local time</span>
+        <span class="value">
+          <span class="value-large">
+            <time data-clock={site.timeZone} hidden></time><noscript>{site.place}</noscript>
+          </span>
+          <span class="meta muted">
+            Europe/Riga{' '}
+            <span data-sun-wrap hidden>
+              {'· sun '}<span data-sun></span>{'° '}<span data-sun-word></span>
+            </span>
+          </span>
+        </span>
+      </div>
+      <div class="panel">
+        <span class="meta muted">This page</span>
+        <span class="value">
+          <span class="value-large">
+            <data data-build="page-kb" value="">–</data><span class="meta muted unit">
+              KB of a 14 KB budget</span
+            >
+          </span>
+          <span class="bar" aria-hidden="true"
+            ><span class="bar-fill" data-build-fill style="--fill: 0%"></span></span
+          >
+        </span>
+      </div>
+      <div class="panel">
+        <span class="meta muted">Last build</span>
+        <span class="value">
+          <span class="value-large"><data data-build="date" value="">–</data></span>
+          <span class="meta muted">from <data class="commit" data-build="commit" value="">–</data></span>
+        </span>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="writing">
+      <h2 id="writing" class="section-label">Writing</h2>
+      <div class="writing">
+        <PostList posts={posts.slice(0, 3)} />
+        {
+          posts.length > 0 && (
+            <a class="back all" href="/writing">
+              All writing{posts.length > 3 ? ` (${posts.length})` : ''}
+              <Icon name="arrow-right" />
+            </a>
+          )
+        }
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .hero {
+    display: grid;
+    gap: 24px;
+    padding-block: clamp(80px, 11vw, 144px) 64px;
+  }
+
+  .name {
+    font-size: var(--step-display);
+    font-weight: 600;
+    letter-spacing: -0.05em;
+    line-height: 0.95;
+  }
+
+  .line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.08em;
+  }
+
+  .line > span {
+    display: inline-block;
+  }
+
+  /* The full stop as the mark's accent square, sat on the baseline. */
+  .stop {
+    display: inline-block;
+    width: 0.15em;
+    height: 0.15em;
+    margin-left: 0.04em;
+    background: var(--accent);
+  }
+
+  /* Once per session the name rises out of its mask, then the introduction follows. */
+  :global(:root[data-intro]) .line > span {
+    animation: rise 0.9s var(--ease) both;
+  }
+
+  :global(:root[data-intro]) .intro {
+    animation: appear 0.8s ease 250ms both;
+  }
+
+  @keyframes rise {
+    from {
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes appear {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  .now {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .now > :global(*) {
+    min-height: 184px;
+  }
+
+  @media (max-width: 1100px) {
+    .now {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 600px) {
+    .now {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .value {
+    display: grid;
+    gap: 8px;
+    padding-right: 28px;
+  }
+
+  .value-large {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+    font-size: 40px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .value-small {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+
+  .unit {
+    letter-spacing: 0;
+  }
+
+  .commit {
+    color: var(--fg);
+  }
+
+  .bar {
+    display: block;
+    height: 4px;
+    margin-top: 6px;
+    border-radius: 4px;
+    background: var(--raised);
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    display: block;
+    width: var(--fill);
+    height: 100%;
+    border-radius: 4px;
+    background: var(--accent);
+  }
+
+
+
+  .writing {
+    display: grid;
+    gap: 8px;
+  }
+
+  .all {
+    margin-top: 4px;
+  }
+</style>

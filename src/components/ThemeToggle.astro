@@ -1,0 +1,102 @@
+---
+import Icon from './Icon.astro'
+---
+
+<button class="toggle button" type="button" data-theme-toggle hidden aria-label="Switch theme">
+  <Icon name="moon" class="moon" />
+  <Icon name="sun" class="sun" />
+</button>
+
+<script>
+  type Theme = 'light' | 'dark'
+
+  const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]')
+  const root = document.documentElement
+  const system = matchMedia('(prefers-color-scheme: dark)')
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
+
+  const current = (): Theme => (root.dataset.theme === 'dark' ? 'dark' : 'light')
+  const other = (theme: Theme): Theme => (theme === 'dark' ? 'light' : 'dark')
+
+  const stored = (): Theme | null => {
+    try {
+      const value = localStorage.getItem('theme')
+      return value === 'light' || value === 'dark' ? value : null
+    } catch {
+      return null
+    }
+  }
+
+  if (button) {
+    const label = () => button.setAttribute('aria-label', `Switch to ${other(current())} theme`)
+
+    const apply = (theme: Theme) => {
+      root.dataset.theme = theme
+      label()
+    }
+
+    label()
+    button.hidden = false
+
+    button.addEventListener('click', () => {
+      const next = other(current())
+      try {
+        localStorage.setItem('theme', next)
+      } catch {}
+
+      root.dataset.themeSwitching = ''
+
+      if (!document.startViewTransition || reducedMotion.matches) {
+        apply(next)
+        // Two frames: the new colours paint with transitions still off.
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => delete root.dataset.themeSwitching),
+        )
+        return
+      }
+
+      const rect = button.getBoundingClientRect()
+      const x = rect.left + rect.width / 2
+      const y = rect.top + rect.height / 2
+      const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
+
+      const transition = document.startViewTransition(() => apply(next))
+      transition.ready.then(() => {
+        root.animate(
+          {
+            clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`],
+          },
+          {
+            duration: 500,
+            easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+            pseudoElement: '::view-transition-new(root)',
+          },
+        )
+      })
+      transition.finished.finally(() => {
+        delete root.dataset.themeSwitching
+      })
+    })
+
+    system.addEventListener('change', (event) => {
+      if (!stored()) apply(event.matches ? 'dark' : 'light')
+    })
+  }
+</script>
+
+<style>
+  .toggle {
+    width: 44px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .toggle[hidden] {
+    display: none;
+  }
+
+  :global([data-theme='dark']) .toggle :global(.moon),
+  :global(:root:not([data-theme='dark'])) .toggle :global(.sun) {
+    display: none;
+  }
+</style>

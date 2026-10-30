@@ -1,0 +1,117 @@
+---
+import { render } from 'astro:content'
+import type { GetStaticPaths } from 'astro'
+import Article from '../../components/Article.astro'
+import Icon from '../../components/Icon.astro'
+import Base from '../../layouts/Base.astro'
+import { readingMinutes } from '../../lib/posts'
+import { getProducts, getWriteUp, type Product, productFacts } from '../../lib/products'
+
+export const getStaticPaths = (async () => {
+  const products = await getProducts()
+  return products.map((product, index) => ({
+    params: { slug: product.id },
+    props: { product, next: products[(index + 1) % products.length] },
+  }))
+}) satisfies GetStaticPaths
+
+interface Props {
+  product: Product
+  next: Product | undefined
+}
+
+const { product, next } = Astro.props
+const { name, url, description, status } = product.data
+const writeUp = await getWriteUp(product)
+const rendered = writeUp ? await render(writeUp) : undefined
+---
+
+<Base title={name} description={description}>
+  <article class="container">
+    <header class="page-head">
+      <a class="back" href="/building">Building</a>
+      <h1 class="page-title" style={{ viewTransitionName: `product-${product.id}` }}>{name}</h1>
+      <p class="lede">{description}</p>
+    </header>
+    <div class="panel summary">
+      <dl class="facts">
+        {
+          productFacts(product).map((fact) => (
+            <div class="fact">
+              <dt>{fact.label}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))
+        }
+        <div class="fact">
+          <dt>Status</dt>
+          <dd>{status}</dd>
+        </div>
+      </dl>
+      {
+        url && (
+          <a class="button button-primary" href={url}>
+            Visit {name}
+            <Icon name="arrow-up-right" />
+          </a>
+        )
+      }
+    </div>
+    {
+      writeUp && rendered && (
+        <div class="write-up">
+          <Article headings={rendered.headings} minutes={readingMinutes(writeUp)}>
+            <rendered.Content />
+          </Article>
+        </div>
+      )
+    }
+    {
+      next && next.id !== product.id && (
+        <nav class="section" aria-label="Next product">
+          <span class="section-label">Next</span>
+          <a class="panel next" href={`/building/${next.id}`}>
+            <Icon name="arrow-right" size={16} class="panel-arrow" />
+            <span class="next-name">{next.data.name}</span>
+            <span class="muted">{next.data.description}</span>
+          </a>
+        </nav>
+      )
+    }
+  </article>
+</Base>
+
+<style>
+  .summary {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 16px 48px;
+    padding: 12px 24px;
+  }
+
+  .facts {
+    flex: 999 1 420px;
+    min-width: 0;
+  }
+
+  .summary .button {
+    margin-block: 12px;
+  }
+
+  .write-up {
+    padding-top: 88px;
+  }
+
+  .next {
+    gap: 6px;
+    justify-content: flex-start;
+    padding-right: 56px;
+  }
+
+  .next-name {
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+  }
+</style>

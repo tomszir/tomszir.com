@@ -1,0 +1,150 @@
+---
+import Icon from '../components/Icon.astro'
+import Base from '../layouts/Base.astro'
+import { getProducts } from '../lib/products'
+import { site } from '../site'
+
+const products = await getProducts()
+---
+
+<Base title="CV" description="Experience and skills of Toms Zvirbulis, software developer in Latvia.">
+  <div class="container">
+    <header class="page-head">
+      <h1 class="page-title" style={{ viewTransitionName: 'page-cv' }}>CV</h1>
+      <p class="lede">{site.name}. Software developer, {site.place}.</p>
+      <button class="button no-print" type="button" data-print hidden>
+        <Icon name="printer" />Print or save as PDF
+      </button>
+    </header>
+
+    <section class="section first" aria-labelledby="experience">
+      <h2 id="experience" class="section-label">Experience</h2>
+      <ol>
+        {
+          site.experience.map((job) => (
+            <li class="row">
+              <span class="row-title">{job.company}</span>
+              <span class="meta muted">{job.years}</span>
+              <span class="row-note">{job.role}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="section" aria-labelledby="building">
+      <h2 id="building" class="section-label">Building</h2>
+      <ul>
+        {
+          products.map(({ data }) => (
+            <li class="row">
+              {data.url ? (
+                <a class="row-title link" href={data.url}>
+                  {data.name}
+                </a>
+              ) : (
+                <span class="row-title">{data.name}</span>
+              )}
+              <span class="meta muted">{data.role}</span>
+              <span class="row-note">{data.description}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="section" aria-labelledby="skills">
+      <h2 id="skills" class="section-label">Skills</h2>
+      <dl class="facts">
+        {
+          site.skills.map((skill) => (
+            <div class="fact">
+              <dt>{skill.label}</dt>
+              <dd>{skill.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <section class="section" aria-labelledby="reach">
+      <h2 id="reach" class="section-label">Contact</h2>
+      <dl class="facts">
+        <div class="fact">
+          <dt>Email</dt>
+          <dd><a class="link target" href={`mailto:${site.email}`}>{site.email}</a></dd>
+        </div>
+        <div class="fact">
+          <dt>GitHub</dt>
+          <dd><a class="link target" href={site.github}>github.com/tomszir</a></dd>
+        </div>
+        <div class="fact">
+          <dt>Web</dt>
+          <dd><a class="link target" href={site.url}>tomszir.com</a></dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+</Base>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('[data-print]')
+  if (button) {
+    button.hidden = false
+    button.addEventListener('click', () => window.print())
+  }
+</script>
+
+<style>
+  .page-head .button {
+    justify-self: start;
+  }
+
+  .button[hidden] {
+    display: none;
+  }
+
+  .first {
+    padding-top: 24px;
+  }
+
+  .row-title.link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .target {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .fact {
+    padding-block: 4px;
+  }
+
+  @media print {
+    .page-head {
+      padding-block: 0 12pt;
+    }
+
+    .page-title {
+      font-size: 36pt;
+    }
+
+    .section {
+      grid-template-columns: 120pt minmax(0, 1fr);
+      padding-top: 14pt;
+      break-inside: avoid;
+    }
+
+    .row {
+      padding-block: 4pt;
+    }
+  }
+
+  @page {
+    margin: 16mm;
+  }
+</style>

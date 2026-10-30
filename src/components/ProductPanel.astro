@@ -1,0 +1,87 @@
+---
+import type { Product } from '../lib/products'
+import Icon from './Icon.astro'
+
+interface Props {
+  product: Product
+  label?: string
+}
+
+const { product, label } = Astro.props
+const { name, description, role, status } = product.data
+---
+
+<a class="panel product" href={`/building/${product.id}`}>
+  {label && <span class="meta muted">{label}</span>}
+  <Icon name="arrow-up-right" size={16} class="panel-arrow" />
+  <span class="body">
+    <span class="name" style={{ viewTransitionName: `product-${product.id}` }}>{name}</span>
+    <span class="description">{description}</span>
+  </span>
+  <dl class="meta facts">
+    <div>
+      <dt>Role</dt>
+      <dd>{role}</dd>
+    </div>
+    <div>
+      <dt>Status</dt>
+      <dd>{status}</dd>
+    </div>
+  </dl>
+</a>
+
+<style>
+  .product {
+    justify-content: flex-start;
+    gap: 20px;
+    min-height: 200px;
+  }
+
+  .body {
+    display: grid;
+    gap: 8px;
+    padding-right: 28px;
+  }
+
+  .name {
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+
+  .description {
+    max-width: 48ch;
+    font-size: 16px;
+    color: var(--muted);
+  }
+
+  /* The same two facts on every card, one per line and pinned to the bottom, so cards in a row
+     line up whatever their descriptions. */
+  .facts {
+    display: grid;
+    gap: 2px;
+    margin-top: auto;
+  }
+
+  .facts div {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  dt {
+    color: var(--muted);
+  }
+
+  /* Values are words, not data: the sans face, which also fits a longer role on one line. */
+  dd {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    letter-spacing: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+</style>

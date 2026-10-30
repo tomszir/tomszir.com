@@ -1,0 +1,22 @@
+---
+/** An aside: context a reader can skip without losing the thread. */
+---
+
+<aside class="note">
+  <slot />
+</aside>
+
+<style>
+  .note {
+    padding: 16px 20px;
+    border-radius: var(--radius-panel);
+    background: var(--panel);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  .note :global(> * + *) {
+    margin-top: 0.8em;
+  }
+</style>

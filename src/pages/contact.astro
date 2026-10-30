@@ -1,0 +1,112 @@
+---
+import Icon from '../components/Icon.astro'
+import Base from '../layouts/Base.astro'
+import { site } from '../site'
+---
+
+<Base title="Contact" description="How to reach Toms Zvirbulis: email, GitHub and the RSS feed.">
+  <div class="container">
+    <header class="page-head">
+      <h1 class="page-title" style={{ viewTransitionName: 'page-contact' }}>Contact</h1>
+      <p class="lede">Email is the quickest way to reach me.</p>
+    </header>
+
+    <div class="panel email">
+      <a class="address" href={`mailto:${site.email}`}>{site.email}</a>
+      <button class="button button-primary" type="button" data-copy-email={site.email} hidden>
+        <Icon name="copy" class="when-idle" />
+        <Icon name="check" class="when-copied" />
+        <span data-copy-label>Copy email</span>
+      </button>
+      <p class="sr-only" aria-live="polite" data-copy-status></p>
+    </div>
+
+    <ul class="channels" data-glide>
+      <li>
+        <a class="row" href={site.github} data-glide-item>
+          <span class="channel"><Icon name="github" size={18} />GitHub</span>
+          <span class="meta muted">github.com/tomszir</span>
+        </a>
+      </li>
+      <li>
+        <a class="row" href="/rss.xml" data-glide-item>
+          <span class="channel"><Icon name="rss" size={18} />RSS</span>
+          <span class="meta muted">tomszir.com/rss.xml</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</Base>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('[data-copy-email]')
+  const status = document.querySelector<HTMLElement>('[data-copy-status]')
+
+  if (button && status && navigator.clipboard) {
+    const address = button.dataset.copyEmail ?? ''
+    const label = button.querySelector('[data-copy-label]')
+    let reset: number | undefined
+    button.hidden = false
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(address)
+      } catch {
+        return
+      }
+      if (label) label.textContent = 'Copied'
+      button.dataset.copied = ''
+      status.textContent = 'Email address copied'
+      clearTimeout(reset)
+      reset = window.setTimeout(() => {
+        if (label) label.textContent = 'Copy email'
+        delete button.dataset.copied
+        status.textContent = ''
+      }, 1600)
+    })
+  }
+</script>
+
+<style>
+  .email {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 32px;
+    padding: 28px;
+  }
+
+  .address {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: clamp(28px, 4.5vw, 48px);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    overflow-wrap: anywhere;
+  }
+
+  .button[hidden] {
+    display: none;
+  }
+
+  .button :global(.when-copied),
+  .button[data-copied] :global(.when-idle) {
+    display: none;
+  }
+
+  .button[data-copied] :global(.when-copied) {
+    display: inline-flex;
+  }
+
+  .channels {
+    padding-top: 32px;
+  }
+
+  .channel {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+  }
+</style>

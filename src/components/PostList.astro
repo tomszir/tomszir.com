@@ -1,0 +1,54 @@
+---
+import { formatDate, type Post, readingMinutes } from '../lib/posts'
+import Icon from './Icon.astro'
+
+interface Props {
+  posts: Post[]
+}
+
+const { posts } = Astro.props
+---
+
+{
+  posts.length > 0 ? (
+    <ol data-glide>
+      {posts.map((post) => (
+        <li>
+          <a class="row" href={`/writing/${post.id}`} data-glide-item>
+            <span class="row-title" style={{ viewTransitionName: `post-${post.id}` }}>
+              {post.data.title}
+            </span>
+            <span class="meta muted">
+              <time datetime={post.data.published.toISOString()}>
+                {formatDate(post.data.published)}
+              </time>
+              {` · ${readingMinutes(post)} min`}
+            </span>
+            <span class="row-note">{post.data.description}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  ) : (
+    <div class="panel empty">
+      <p>
+        Nothing published yet. <span class="muted">The first write-up is on its way.</span>
+      </p>
+      <a class="button" href="/rss.xml">
+        <Icon name="rss" />
+        Get it by RSS
+      </a>
+    </div>
+  )
+}
+
+<style>
+  .empty {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 19px;
+  }
+</style>

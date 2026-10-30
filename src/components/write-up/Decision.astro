@@ -1,0 +1,50 @@
+---
+/** A decision in a write-up: what was chosen, what was passed over, and why. */
+interface Props {
+  chosen: string
+  instead: string
+}
+
+const { chosen, instead } = Astro.props
+---
+
+<aside class="decision" aria-label="Decision">
+  <span class="label">Decision</span>
+  <span class="chosen">{chosen}</span>
+  <span class="label">Instead of</span>
+  <span>{instead}</span>
+  <span class="label">Because</span>
+  <span><slot /></span>
+</aside>
+
+<style>
+  .decision {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 10px 20px;
+    padding: 20px 22px;
+    border-radius: var(--radius-panel);
+    background: var(--panel);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .label {
+    color: var(--muted);
+  }
+
+  .chosen {
+    font-weight: 500;
+  }
+
+  @media (max-width: 600px) {
+    .decision {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+    }
+
+    .label:not(:first-child) {
+      margin-top: 10px;
+    }
+  }
+</style>

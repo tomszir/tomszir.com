@@ -1,0 +1,6 @@
+# Exact versions; upgrades are deliberate.
+savePrefix: ""
+
+allowBuilds:
+  esbuild: true
+  workerd: true

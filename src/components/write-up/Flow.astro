@@ -1,0 +1,121 @@
+---
+/**
+ * A sequence of steps read top to bottom: numbered rows with room for a sentence each, joined by
+ * arrows in a left rail that can carry a label (what passes between two steps).
+ */
+interface Step {
+  title: string
+  note?: string
+  /** Marks the step the write-up is about with the accent square. */
+  focus?: boolean
+}
+
+interface Props {
+  steps: Step[]
+  /** The label on each arrow between two steps; one fewer than the steps. */
+  links?: string[]
+  caption: string
+}
+
+const { steps, links = [], caption } = Astro.props
+const number = (index: number) => String(index + 1).padStart(2, '0')
+---
+
+<figure class="flow">
+  <ol class="track">
+    {
+      steps.map((step, index) => (
+        <li class="item">
+          {index > 0 && (
+            <div class="connector meta muted" aria-hidden="true">
+              <span class="arrow">↓</span>
+              <span>{links[index - 1] ?? ''}</span>
+            </div>
+          )}
+          <div class:list={['step', { focus: step.focus }]}>
+            <span class="number meta muted">
+              {number(index)}
+              {step.focus && <span class="square" aria-hidden="true" />}
+            </span>
+            <span class="body">
+              <span class="title">{step.title}</span>
+              {step.note && <span class="note">{step.note}</span>}
+            </span>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+  <figcaption class="meta muted">{caption}</figcaption>
+</figure>
+
+<style>
+  .flow {
+    display: grid;
+    gap: 12px;
+  }
+
+  /* Doubled class: outranks the prose list styles (padding, markers, spacing). */
+  .track.track {
+    margin: 0;
+    padding: 12px;
+    list-style: none;
+    border-radius: var(--radius-panel);
+    background: var(--panel);
+  }
+
+  .track > .item.item {
+    margin: 0;
+  }
+
+  .step,
+  .connector {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 0 12px;
+  }
+
+  .step {
+    align-items: start;
+    padding: 14px 16px;
+    border-radius: var(--radius-row);
+    background: var(--bg);
+  }
+
+  .step.focus {
+    background: var(--raised);
+  }
+
+  .number {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 2px;
+  }
+
+  .square {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+  }
+
+  .body {
+    display: grid;
+    gap: 2px;
+    line-height: 1.45;
+  }
+
+  .title {
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .note {
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  .connector {
+    padding: 6px 16px;
+  }
+</style>

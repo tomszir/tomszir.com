@@ -1,0 +1,55 @@
+---
+import { site } from '../site'
+import Icon from './Icon.astro'
+---
+
+<footer class="container no-print">
+  <div class="links">
+    <a class="button" href={`mailto:${site.email}`}><Icon name="mail" />Email</a>
+    <a class="button" href={site.github}><Icon name="github" />GitHub</a>
+    <a class="button" href="/rss.xml"><Icon name="rss" />RSS</a>
+  </div>
+  <div class="build meta muted">
+    <p>
+      Built <data data-build="date" value="">–</data> from <data
+        data-build="commit"
+        value="">–</data
+      > · <data data-build="page-kb" value="">–</data> KB
+    </p>
+    <p>Every number here is measured at build time or computed in your browser.</p>
+  </div>
+</footer>
+
+<style>
+  footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: var(--section-gap);
+    padding-block: 32px 48px;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .build {
+    display: grid;
+    gap: 2px;
+    text-align: right;
+  }
+
+  data {
+    color: var(--fg);
+  }
+
+  @media (max-width: 700px) {
+    .build {
+      text-align: left;
+    }
+  }
+</style>

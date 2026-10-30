@@ -1,0 +1,54 @@
+/* Values and roles: the site-design skill. Dark is the primary design; light mirrors it. */
+
+:root {
+  color-scheme: light;
+  --bg: #f7f7f5;
+  --panel: #eeeeea;
+  --raised: #e5e5e0;
+  --fg: #121212;
+  --muted: #5f5f5b;
+  --line: #c9c9c4;
+  --accent: #e8480c;
+
+  --step-display: clamp(52px, 8.5vw, 112px);
+  --step-title: clamp(40px, 6vw, 72px);
+  --step-lede: clamp(18px, 2vw, 22px);
+  --step-body: 18px;
+  --step-meta: 12.5px;
+
+  --radius-panel: 16px;
+  --radius-row: 10px;
+  --radius-control: 8px;
+
+  --container: 1104px;
+  --gutter: clamp(16px, 4vw, 48px);
+  --section-gap: 112px;
+  --measure: 66ch;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0b0b0a;
+  --panel: #141413;
+  --raised: #1b1b19;
+  --fg: #e9e8e3;
+  --muted: #8f8e88;
+  --line: #3a3a37;
+  --accent: #ff6b35;
+}
+
+/* The head script sets data-theme; this covers the case where it can't run. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --bg: #0b0b0a;
+    --panel: #141413;
+    --raised: #1b1b19;
+    --fg: #e9e8e3;
+    --muted: #8f8e88;
+    --line: #3a3a37;
+    --accent: #ff6b35;
+  }
+}

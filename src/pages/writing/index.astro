@@ -1,0 +1,21 @@
+---
+import PostList from '../../components/PostList.astro'
+import Base from '../../layouts/Base.astro'
+import { getPosts } from '../../lib/posts'
+
+const posts = await getPosts()
+---
+
+<Base title="Writing" description="Notes and essays by Toms Zvirbulis on building software.">
+  <div class="container">
+    <header class="page-head">
+      <h1 class="page-title" style={{ viewTransitionName: 'page-writing' }}>Writing</h1>
+      <p class="lede">
+        Notes and essays on building software. {posts.length === 1 ? '1 post' : `${posts.length} posts`}
+        so far.
+      </p>
+      <a class="back" href="/rss.xml">RSS feed</a>
+    </header>
+    <PostList posts={posts} />
+  </div>
+</Base>

@@ -1,0 +1,122 @@
+---
+import { render } from 'astro:content'
+import type { GetStaticPaths } from 'astro'
+import Article from '../../components/Article.astro'
+import Icon from '../../components/Icon.astro'
+import Base from '../../layouts/Base.astro'
+import { formatDate, getPosts, type Post, readingMinutes } from '../../lib/posts'
+
+export const getStaticPaths = (async () => {
+  const posts = await getPosts()
+  // Newest first, so the next post is the older one.
+  return posts.map((post, index) => ({
+    params: { slug: post.id },
+    props: { post, newer: posts[index - 1], older: posts[index + 1] },
+  }))
+}) satisfies GetStaticPaths
+
+interface Props {
+  post: Post
+  newer: Post | undefined
+  older: Post | undefined
+}
+
+const { post, newer, older } = Astro.props
+const { Content, headings } = await render(post)
+const { title, description, published, updated } = post.data
+---
+
+<Base title={title} description={description}>
+  <div class="progress" aria-hidden="true"></div>
+  <article class="container">
+    <header class="page-head">
+      <a class="back" href="/writing">Writing</a>
+      <h1 class="page-title" style={{ viewTransitionName: `post-${post.id}` }}>{title}</h1>
+      <p class="meta muted">
+        <time datetime={published.toISOString()}>{formatDate(published)}</time>
+        {
+          updated && (
+            <>
+              {' · updated '}
+              <time datetime={updated.toISOString()}>{formatDate(updated)}</time>
+            </>
+          )
+        }
+        {` · ${readingMinutes(post)} min`}
+      </p>
+    </header>
+    <Article headings={headings} minutes={readingMinutes(post)}>
+      <Content />
+    </Article>
+    {
+      (newer || older) && (
+        <nav class="section" aria-label="More writing">
+          <span class="section-label">More</span>
+          <div class="more">
+            {older && (
+              <a class="panel" href={`/writing/${older.id}`}>
+                <span class="meta muted">Previous</span>
+                <Icon name="arrow-right" size={16} class="panel-arrow" />
+                <span class="title">{older.data.title}</span>
+              </a>
+            )}
+            {newer && (
+              <a class="panel" href={`/writing/${newer.id}`}>
+                <span class="meta muted">Next</span>
+                <Icon name="arrow-right" size={16} class="panel-arrow" />
+                <span class="title">{newer.data.title}</span>
+              </a>
+            )}
+          </div>
+        </nav>
+      )
+    }
+  </article>
+</Base>
+
+<style>
+  .page-title {
+    max-width: 20ch;
+  }
+
+  .more {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  .more .title {
+    padding-right: 28px;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  /* A reading-progress line tied to scroll, off the main thread. Hidden where unsupported. */
+  .progress {
+    display: none;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .progress {
+      display: block;
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 50;
+      height: 2px;
+      background: var(--accent);
+      transform-origin: 0 50%;
+      animation: progress linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+
+  @keyframes progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+</style>

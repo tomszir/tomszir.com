@@ -1,0 +1,413 @@
+---
+import { site } from '../site'
+import Icon from './Icon.astro'
+import ThemeToggle from './ThemeToggle.astro'
+
+// With file output the build sees `/building.html`, the dev server `/building`.
+const path = Astro.url.pathname.replace(/\.html$/, '')
+const links = [
+  { number: '01', href: '/building', label: 'Building' },
+  { number: '02', href: '/writing', label: 'Writing' },
+  { number: '03', href: '/cv', label: 'CV' },
+  { number: '04', href: '/contact', label: 'Contact' },
+].map((link) => ({
+  ...link,
+  current: path === link.href || path.startsWith(`${link.href}/`),
+}))
+---
+
+<header class="site-header no-print" data-header>
+  <div class="container bar">
+    <div class="start">
+      <a class="mark" href="/" aria-label={`${site.name}, home`}>
+        <span class="square" aria-hidden="true"></span>tomszir
+      </a>
+    </div>
+    <div class="end">
+      <nav class="links" aria-label="Primary" data-nav>
+        <span class="blobs" aria-hidden="true">
+          <span class="blob" data-blob="current"></span>
+          <span class="blob" data-blob="hover"></span>
+        </span>
+        <ul>
+          {
+            links.map((link) => (
+              <li>
+                <a href={link.href} aria-current={link.current ? 'page' : undefined} data-nav-link>
+                  {link.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <svg class="goo-filter" aria-hidden="true" focusable="false">
+          <filter id="nav-goo">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur"></feGaussianBlur>
+            <feColorMatrix
+              in="blur"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"
+              result="goo"></feColorMatrix>
+            <feComposite in="SourceGraphic" in2="goo" operator="atop"></feComposite>
+          </filter>
+        </svg>
+      </nav>
+      <ThemeToggle />
+      <button
+        class="menu-button button"
+        type="button"
+        aria-expanded="false"
+        aria-controls="menu"
+        data-menu-button
+        hidden
+      >
+        <Icon name="menu" class="when-closed" />
+        <Icon name="x" class="when-open" />
+        <span data-menu-label>Menu</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="menu" id="menu" data-menu hidden>
+    <nav class="container" aria-label="Menu">
+      <ol>
+        {
+          links.map((link, index) => (
+            <li style={{ '--i': index }}>
+              <a class="panel" href={link.href} aria-current={link.current ? 'page' : undefined}>
+                <span class="menu-title">{link.label}</span>
+                <Icon name="arrow-right" size={18} class="panel-arrow" />
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-header]')
+  const button = document.querySelector<HTMLButtonElement>('[data-menu-button]')
+  const menu = document.querySelector<HTMLElement>('[data-menu]')
+
+  if (header && button && menu) {
+    // Hide while reading down the page; return on any scroll up, near the top, or on focus.
+    let lastY = scrollY
+    let ticking = false
+    const onScroll = () => {
+      const y = scrollY
+      if (!header.matches(':focus-within') && !header.hasAttribute('data-menu-open')) {
+        if (y > 80 && y - lastY > 8) header.dataset.hidden = ''
+        else if (y < lastY || y <= 80) delete header.dataset.hidden
+      }
+      if (Math.abs(y - lastY) > 8 || y <= 80) lastY = y
+      header.toggleAttribute('data-scrolled', y > 0)
+      ticking = false
+    }
+    addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true
+          requestAnimationFrame(onScroll)
+        }
+      },
+      { passive: true },
+    )
+    header.addEventListener('focusin', () => delete header.dataset.hidden)
+
+    // The phone menu. Everything outside the header is inert while it's open.
+    const outside = () =>
+      [...document.body.children].filter(
+        (el): el is HTMLElement => el instanceof HTMLElement && el !== header,
+      )
+
+    const setOpen = (open: boolean) => {
+      button.setAttribute('aria-expanded', String(open))
+      const label = button.querySelector('[data-menu-label]')
+      if (label) label.textContent = open ? 'Close' : 'Menu'
+      header.toggleAttribute('data-menu-open', open)
+      document.documentElement.toggleAttribute('data-menu-open', open)
+      for (const el of outside()) el.inert = open
+      menu.hidden = !open
+      if (open) {
+        delete header.dataset.hidden
+        menu.querySelector('a')?.focus()
+      } else {
+        button.focus()
+      }
+    }
+
+    button.hidden = false
+    header.dataset.menuReady = ''
+    button.addEventListener('click', () => setOpen(button.getAttribute('aria-expanded') !== 'true'))
+    addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && header.hasAttribute('data-menu-open')) setOpen(false)
+    })
+    matchMedia('(min-width: 821px)').addEventListener('change', (event) => {
+      if (event.matches && header.hasAttribute('data-menu-open')) setOpen(false)
+    })
+  }
+
+  // The nav's highlights: one pill under the current page, one that follows the pointer. They sit
+  // in a layer with a gooey SVG filter, so when the hover pill reaches the current one they join
+  // with a curved waist and pull apart again. On leaving, the hover pill slides back into the
+  // current one and is absorbed.
+  const nav = document.querySelector<HTMLElement>('[data-nav]')
+  const currentBlob = nav?.querySelector<HTMLElement>('[data-blob="current"]')
+  const hoverBlob = nav?.querySelector<HTMLElement>('[data-blob="hover"]')
+
+  if (nav && currentBlob && hoverBlob) {
+    const navLinks = [...nav.querySelectorAll<HTMLAnchorElement>('[data-nav-link]')]
+    const current = navLinks.find((link) => link.getAttribute('aria-current') === 'page')
+
+    const put = (blob: HTMLElement, link: HTMLElement) => {
+      blob.style.setProperty('--x', `${link.offsetLeft}px`)
+      blob.style.setProperty('--w', `${link.offsetWidth}px`)
+    }
+
+    const rest = () => {
+      if (current) put(hoverBlob, current)
+      hoverBlob.removeAttribute('data-on')
+    }
+
+    const place = () => {
+      if (current) {
+        put(currentBlob, current)
+        currentBlob.dataset.on = ''
+      }
+      rest()
+    }
+
+    for (const link of navLinks) {
+      const enter = () => {
+        // From rest, start at the link itself so the pill grows in place rather than sliding in.
+        if (!hoverBlob.hasAttribute('data-on') && !current) put(hoverBlob, link)
+        requestAnimationFrame(() => {
+          put(hoverBlob, link)
+          hoverBlob.dataset.on = ''
+        })
+      }
+      link.addEventListener('pointerenter', enter)
+      link.addEventListener('focus', enter)
+    }
+    nav.addEventListener('pointerleave', () => {
+      if (!nav.contains(document.activeElement)) rest()
+    })
+    nav.addEventListener('focusout', (event) => {
+      if (!(event.relatedTarget instanceof Node && nav.contains(event.relatedTarget))) rest()
+    })
+    addEventListener('resize', place)
+    document.fonts?.ready.then(place)
+    place()
+    nav.dataset.blobsReady = ''
+  }
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--bg);
+    transition: transform 0.45s var(--ease);
+  }
+
+  .site-header[data-hidden] {
+    transform: translateY(-100%);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 24px;
+    min-height: 72px;
+  }
+
+  .start,
+  .end {
+    display: flex;
+    align-items: center;
+    gap: 8px 20px;
+    min-width: 0;
+  }
+
+  .end {
+    gap: 8px;
+  }
+
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .square {
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    view-transition-name: mark;
+  }
+
+  .links {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .links ul {
+    position: relative;
+    display: flex;
+  }
+
+  /* The highlight layer. The filter is what joins the pills; the text above it stays sharp. */
+  .blobs {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    filter: url('#nav-goo');
+    pointer-events: none;
+  }
+
+  /* Each pill is inset from its link, so neighbours keep a gap the filter bridges with a curved
+     neck instead of fusing into one block. */
+  .blob {
+    --inset: 5px;
+    position: absolute;
+    top: 0;
+    left: var(--inset);
+    width: calc(var(--w, 0px) - 2 * var(--inset));
+    height: 100%;
+    border-radius: var(--radius-control);
+    background: var(--panel);
+    opacity: 0;
+    transform: translateX(var(--x, 0));
+    transition:
+      transform 0.45s var(--ease),
+      width 0.45s var(--ease),
+      opacity 0.25s ease;
+  }
+
+  .blob[data-on] {
+    opacity: 1;
+  }
+
+  /* The current pill is always shown once placed; the hover one fades out into it. */
+  .blob[data-blob='current'][data-on] {
+    transition: none;
+  }
+
+  .goo-filter {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: var(--radius-control);
+    font-size: 15px;
+    color: var(--muted);
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .links a:hover,
+  .links a[aria-current='page'] {
+    color: var(--fg);
+  }
+
+  /* Without the script, plain backgrounds stand in for the pills. */
+  .links:not([data-blobs-ready]) a[aria-current='page'],
+  .links:not([data-blobs-ready]) a:hover {
+    background: var(--panel);
+  }
+
+  .menu-button :global(.when-open),
+  .site-header[data-menu-open] .menu-button :global(.when-closed) {
+    display: none;
+  }
+
+  .site-header[data-menu-open] .menu-button :global(.when-open) {
+    display: inline-flex;
+  }
+
+  .menu-button[hidden] {
+    display: none;
+  }
+
+  /* The phone menu: the four pages as panels, full screen. */
+  .menu {
+    position: fixed;
+    inset: 72px 0 0;
+    overflow-y: auto;
+    background: var(--bg);
+  }
+
+  .menu[hidden] {
+    display: none;
+  }
+
+  .menu ol {
+    display: grid;
+    gap: 8px;
+    padding-top: 8px;
+  }
+
+  .menu li {
+    animation: enter 0.45s var(--ease) both;
+    animation-delay: calc(var(--i) * 40ms);
+  }
+
+  .menu .panel {
+    flex-direction: row;
+    align-items: center;
+    min-height: 76px;
+  }
+
+  .menu .panel :global(.panel-arrow) {
+    top: auto;
+    opacity: 1;
+    transform: none;
+  }
+
+  .menu a[aria-current='page'] {
+    background: var(--raised);
+  }
+
+  .menu-title {
+    font-size: 30px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  @media (max-width: 820px) {
+    .site-header[data-menu-ready] .links {
+      display: none;
+    }
+  }
+
+  @media (min-width: 821px) {
+    .menu-button {
+      display: none;
+    }
+  }
+</style>
