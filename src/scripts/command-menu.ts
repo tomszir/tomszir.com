@@ -196,7 +196,7 @@ async function build(): Promise<HTMLDialogElement> {
       }
       const detail = option.querySelector('.command-detail')
       if (detail) detail.textContent = 'Copied'
-      count.textContent = 'Email copied'
+      count.textContent = 'Email address copied'
       setTimeout(() => element.close(), 700)
     } else if (entry.action === 'theme') {
       element.close()
