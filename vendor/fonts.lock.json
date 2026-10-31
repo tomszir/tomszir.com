@@ -7,14 +7,16 @@
       "package": "@fontsource-variable/inter-tight",
       "version": "5.3.0",
       "integrity": "sha512-ZhZZ29sNZ15P1K+cUt13GeBRYON0akgmNiftshUeDLos7X7zGcRgPzt434879Xhq1QbwlW3M/apBMk7jWabwvA==",
-      "weight": [400, 600]
+      "weight": [400, 600],
+      "cardWeights": [400, 600]
     },
     {
       "name": "jetbrains-mono",
       "package": "@fontsource-variable/jetbrains-mono",
       "version": "5.3.0",
       "integrity": "sha512-F32xpS2NsGYoQi2ADSkKTgpJj7ozajsGgDJ8woTnqjmIB+dxDIqImjl4pXZVEExu8UFZ2ndhmX18EBS/hdz3Lw==",
-      "weight": [400, 500]
+      "weight": [400, 500],
+      "cardWeights": [500]
     }
   ]
 }

@@ -1,6 +1,10 @@
 // Vendors the fonts in vendor/fonts.lock.json into src/fonts/: packs each source package at its
 // pinned version, checks its sha512 against the lock, and cuts its Latin and Latin Extended files
 // down to the characters in scripts/fonts.mjs. Review the diff like any other.
+//
+// src/fonts/card/ holds static TrueType instances at each family's `cardWeights`, for the preview
+// card renderer, which reads neither woff2 nor variable fonts. The build reads them; no page
+// loads them.
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -16,6 +20,7 @@ const scratch = mkdtempSync(join(tmpdir(), 'tomszir-fonts-'))
 try {
   rmSync(out, { recursive: true, force: true })
   mkdirSync(join(out, 'LICENSES'), { recursive: true })
+  mkdirSync(join(out, 'card'))
 
   for (const family of families) {
     const dir = join(scratch, family.name)
@@ -49,6 +54,14 @@ try {
       console.log(
         `${family.name}-${subset}: ${(source.length / 1024).toFixed(1)} KB -> ${(cut.length / 1024).toFixed(1)} KB`,
       )
+
+      for (const weight of family.cardWeights) {
+        const instance = await subsetFont(source, text, {
+          targetFormat: 'truetype',
+          variationAxes: { wght: weight },
+        })
+        writeFileSync(join(out, 'card', `${family.name}-${weight}-${subset}.ttf`), instance)
+      }
     }
     writeFileSync(
       join(out, 'LICENSES', `${family.name}.txt`),
