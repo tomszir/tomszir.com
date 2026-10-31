@@ -27,7 +27,7 @@ const { title, description, published, updated } = post.data
 ---
 
 <Base title={title} description={description}>
-  <div class="progress" aria-hidden="true"></div>
+  <div class="progress" aria-hidden="true" data-progress hidden></div>
   <article class="container">
     <header class="page-head">
       <a class="back" href="/writing">Writing</a>
@@ -74,6 +74,37 @@ const { title, description, published, updated } = post.data
   </article>
 </Base>
 
+<script>
+  // The reading-progress line: how far through the post's text the reader is, full when its last
+  // line reaches the bottom of the viewport. Without the script the line stays hidden.
+  const bar = document.querySelector<HTMLElement>('[data-progress]')
+  const prose = document.querySelector<HTMLElement>('.prose')
+
+  if (bar && prose) {
+    let ticking = false
+    const update = () => {
+      ticking = false
+      const end = prose.getBoundingClientRect().bottom + scrollY - innerHeight
+      const progress = end > 0 ? Math.min(1, Math.max(0, scrollY / end)) : 1
+      bar.style.setProperty('--progress', String(progress))
+    }
+
+    addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true
+          requestAnimationFrame(update)
+        }
+      },
+      { passive: true },
+    )
+    addEventListener('resize', update)
+    update()
+    bar.hidden = false
+  }
+</script>
+
 <style>
   .page-title {
     max-width: 20ch;
@@ -92,31 +123,14 @@ const { title, description, published, updated } = post.data
     letter-spacing: -0.02em;
   }
 
-  /* A reading-progress line tied to scroll, off the main thread. Hidden where unsupported. */
+  /* The reading-progress line, set by the script above. */
   .progress {
-    display: none;
-  }
-
-  @supports (animation-timeline: scroll()) {
-    .progress {
-      display: block;
-      position: fixed;
-      inset: 0 0 auto;
-      z-index: 50;
-      height: 2px;
-      background: var(--accent);
-      transform-origin: 0 50%;
-      animation: progress linear both;
-      animation-timeline: scroll(root);
-    }
-  }
-
-  @keyframes progress {
-    from {
-      transform: scaleX(0);
-    }
-    to {
-      transform: scaleX(1);
-    }
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 50;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(var(--progress, 0));
+    transform-origin: 0 50%;
   }
 </style>
