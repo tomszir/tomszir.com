@@ -12,8 +12,7 @@ const posts = await getPosts()
     <header class="page-head">
       <h1 class="page-title" style={{ viewTransitionName: 'page-writing' }}>Writing</h1>
       <p class="lede">
-        Notes and essays on building software. {posts.length === 1 ? '1 post' : `${posts.length} posts`}
-        so far.
+        Notes and essays on building software. {posts.length === 1 ? '1 post' : `${posts.length} posts`} so far.
       </p>
       <a class="back" href="/rss.xml">RSS feed</a>
     </header>
