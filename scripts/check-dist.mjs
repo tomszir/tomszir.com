@@ -1,8 +1,8 @@
-// Checks the built site in dist/: every page has a language, a title, a description, one h1 and
-// a canonical URL without .html (that address redirects); share tags with a 1200 by 630 card
-// that exists in dist/, and JSON-LD that parses; the touch icon is 180 by 180;
-// no page loads a resource from another origin; the home page's HTML, CSS and JavaScript fit in
-// 14 KB compressed, the first round trip of a new connection. Fonts are counted separately.
+// Checks the built site in dist/: every page has a language, a title, a description, one h1, a
+// canonical URL without .html (that address redirects), a Content-Security-Policy, share tags with
+// a 1200 by 630 card that exists in dist/, and JSON-LD that parses; the touch icon is 180 by 180;
+// no page loads a resource from another origin; the home page's HTML, CSS and JavaScript fit in 14
+// KB compressed, the first round trip of a new connection. Fonts are counted separately.
 // Placeholders ([LIKE THIS]) are reported as warnings until they're filled.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -82,6 +82,11 @@ for (const file of all.filter((path) => path.endsWith('.html'))) {
   const canonical = html.match(/<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i)?.[1]
   if (!canonical) errors.push(`${page}: no canonical URL`)
   else if (canonical.endsWith('.html')) errors.push(`${page}: canonical ${canonical} redirects`)
+
+  const policy = html.match(
+    /<meta\s+http-equiv="content-security-policy"\s+content="([^"]+)"/i,
+  )?.[1]
+  if (!policy?.includes("default-src 'self'")) errors.push(`${page}: no Content-Security-Policy`)
 
   for (const key of ['og:site_name', 'og:image:alt', 'twitter:card']) {
     if (!meta(html, key)) errors.push(`${page}: no ${key}`)

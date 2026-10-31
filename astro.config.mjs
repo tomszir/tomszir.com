@@ -36,6 +36,21 @@ export default defineConfig({
   trailingSlash: 'never',
   build: { format: 'file' },
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
+  // A per-page policy with hashes of that page's scripts and style elements. Style attributes
+  // stay allowed: Shiki colours code with them, and pages set view-transition names and
+  // build-fill values the same way. Frame and transport rules are headers (public/_headers).
+  security: {
+    csp: {
+      directives: [
+        "default-src 'self'",
+        "img-src 'self' data:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'none'",
+      ],
+      styleDirective: { resources: [{ resource: "'unsafe-inline'", kind: 'attribute' }] },
+    },
+  },
   integrations: [
     mdx(),
     sitemap({

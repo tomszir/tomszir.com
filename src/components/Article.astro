@@ -1,6 +1,11 @@
 ---
 import type { MarkdownHeading } from 'astro'
 import Icon from './Icon.astro'
+// The blocks write-ups import from MDX. Imported here too so their styles join the page's own and
+// get hashed into its Content-Security-Policy; from MDX alone they arrive too late and are blocked.
+import './write-up/Decision.astro'
+import './write-up/Flow.astro'
+import './write-up/Note.astro'
 
 interface Props {
   headings: MarkdownHeading[]
