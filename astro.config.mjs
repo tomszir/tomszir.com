@@ -1,3 +1,4 @@
+import { readdirSync, readFileSync } from 'node:fs'
 import mdx from '@astrojs/mdx'
 import sitemap from '@astrojs/sitemap'
 import { defineConfig, fontProviders } from 'astro/config'
@@ -14,13 +15,36 @@ const variants = (family, weight) =>
     unicodeRange: unicodeRange(text),
   }))
 
+/**
+ * Each post's sitemap date: `updated` when set, else `published`. Read from the front matter,
+ * since the config can't use the content collections.
+ */
+const postDates = new Map(
+  readdirSync('./src/content/writing')
+    .filter((file) => /\.mdx?$/.test(file))
+    .map((file) => {
+      const source = readFileSync(`./src/content/writing/${file}`, 'utf8')
+      const field = (name) => source.match(new RegExp(`^${name}:\\s*['"]?([\\d-]+)`, 'm'))?.[1]
+      const date = field('updated') ?? field('published')
+      return [`https://tomszir.com/writing/${file.replace(/\.mdx?$/, '')}`, date]
+    }),
+)
+
 export default defineConfig({
   site: 'https://tomszir.com',
   output: 'static',
   trailingSlash: 'never',
   build: { format: 'file' },
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
-  integrations: [mdx(), sitemap()],
+  integrations: [
+    mdx(),
+    sitemap({
+      serialize: (item) => {
+        const date = postDates.get(item.url)
+        return date ? { ...item, lastmod: new Date(date).toISOString() } : item
+      },
+    }),
+  ],
   markdown: {
     shikiConfig: {
       // The site's own palette, generated in both themes; see the site-design skill.

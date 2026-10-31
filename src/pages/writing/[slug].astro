@@ -3,8 +3,10 @@ import { render } from 'astro:content'
 import type { GetStaticPaths } from 'astro'
 import Article from '../../components/Article.astro'
 import Icon from '../../components/Icon.astro'
+import JsonLd from '../../components/JsonLd.astro'
 import Base from '../../layouts/Base.astro'
 import { formatDate, getPosts, type Post, readingMinutes } from '../../lib/posts'
+import { postData } from '../../lib/structured-data'
 
 export const getStaticPaths = (async () => {
   const posts = await getPosts()
@@ -27,6 +29,7 @@ const { title, description, published, updated } = post.data
 ---
 
 <Base title={title} description={description} article={{ published, updated }}>
+  <JsonLd slot="head" data={postData(post)} />
   <div class="progress" aria-hidden="true" data-progress hidden></div>
   <article class="container">
     <header class="page-head">

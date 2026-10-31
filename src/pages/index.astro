@@ -1,10 +1,12 @@
 ---
 import Icon from '../components/Icon.astro'
+import JsonLd from '../components/JsonLd.astro'
 import PostList from '../components/PostList.astro'
 import ProductPanel from '../components/ProductPanel.astro'
 import Base from '../layouts/Base.astro'
 import { formatDate, getPosts, readingMinutes } from '../lib/posts'
 import { getProducts } from '../lib/products'
+import { personData } from '../lib/structured-data'
 import { site } from '../site'
 
 const [posts, products] = await Promise.all([getPosts(), getProducts()])
@@ -13,6 +15,7 @@ const [main, side] = products
 ---
 
 <Base>
+  <JsonLd slot="head" data={personData} />
   <div class="container">
     <section class="hero" aria-labelledby="name">
       <h1 id="name" class="name">

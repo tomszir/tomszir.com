@@ -1,13 +1,16 @@
 ---
 import Icon from '../components/Icon.astro'
+import JsonLd from '../components/JsonLd.astro'
 import Base from '../layouts/Base.astro'
 import { getProducts } from '../lib/products'
+import { personData } from '../lib/structured-data'
 import { site } from '../site'
 
 const products = await getProducts()
 ---
 
 <Base {...site.pages.cv}>
+  <JsonLd slot="head" data={personData} />
   <div class="container">
     <header class="page-head">
       <h1 class="page-title" style={{ viewTransitionName: 'page-cv' }}>CV</h1>
