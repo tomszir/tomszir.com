@@ -1,9 +1,10 @@
 // Checks the built site in dist/: every page has a language, a title, a description, one h1 and
-// a canonical URL without .html (that address redirects);
+// a canonical URL without .html (that address redirects); share tags with a 1200 by 630 card
+// that exists in dist/, and JSON-LD that parses; the touch icon is 180 by 180;
 // no page loads a resource from another origin; the home page's HTML, CSS and JavaScript fit in
 // 14 KB compressed, the first round trip of a new connection. Fonts are counted separately.
 // Placeholders ([LIKE THIS]) are reported as warnings until they're filled.
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { pageBytes } from './stamp-build.mjs'
@@ -20,6 +21,20 @@ const files = (dir) =>
   })
 
 const attribute = (tag, name) => tag.match(new RegExp(`\\s${name}=["']([^"']*)["']`, 'i'))?.[1]
+
+/** A `<meta>` tag's content, by its `property` or `name`. */
+const meta = (html, key) =>
+  html.match(
+    new RegExp(`<meta\\s+(?:property|name)=["']${key}["']\\s+content=["']([^"']*)["']`, 'i'),
+  )?.[1]
+
+/** A PNG's size as "width by height", or what's wrong with the file. */
+function pngSize(path) {
+  if (!existsSync(path)) return 'missing'
+  const bytes = readFileSync(path)
+  if (bytes.toString('latin1', 1, 4) !== 'PNG') return 'not a PNG'
+  return `${bytes.readUInt32BE(16)} by ${bytes.readUInt32BE(20)}`
+}
 
 const isForeign = (url) => /^(https?:)?\/\//i.test(url) && !url.startsWith(ORIGIN)
 
@@ -68,6 +83,25 @@ for (const file of all.filter((path) => path.endsWith('.html'))) {
   if (!canonical) errors.push(`${page}: no canonical URL`)
   else if (canonical.endsWith('.html')) errors.push(`${page}: canonical ${canonical} redirects`)
 
+  for (const key of ['og:site_name', 'og:image:alt', 'twitter:card']) {
+    if (!meta(html, key)) errors.push(`${page}: no ${key}`)
+  }
+  const card = meta(html, 'og:image')
+  if (!card?.startsWith(`${ORIGIN}/`)) errors.push(`${page}: og:image ${card ?? 'missing'}`)
+  else {
+    const size = pngSize(join(DIST, card.slice(ORIGIN.length)))
+    if (size !== '1200 by 630') errors.push(`${page}: card ${card} is ${size}`)
+  }
+  for (const [, json] of html.matchAll(
+    /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
+  )) {
+    try {
+      JSON.parse(json)
+    } catch {
+      errors.push(`${page}: JSON-LD does not parse`)
+    }
+  }
+
   for (const url of resources(html)) {
     if (isForeign(url)) errors.push(`${page}: loads ${url} from another origin`)
   }
@@ -89,6 +123,9 @@ for (const file of all.filter((path) => path.endsWith('.css'))) {
     if (isForeign(url)) errors.push(`/${relative(DIST, file)}: loads ${url} from another origin`)
   }
 }
+
+const touchIconSize = pngSize(join(DIST, 'apple-touch-icon.png'))
+if (touchIconSize !== '180 by 180') errors.push(`/apple-touch-icon.png is ${touchIconSize}`)
 
 const home = readFileSync(join(DIST, 'index.html'), 'utf8')
 const homeBytes = pageBytes(home)
