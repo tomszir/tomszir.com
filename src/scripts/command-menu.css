@@ -1,0 +1,161 @@
+/* The command menu (src/scripts/command-menu.ts). Loaded with it, on first open. */
+
+html[data-command-open] {
+  overflow: hidden;
+}
+
+.command-menu {
+  width: min(640px, calc(100vw - 32px));
+  max-height: min(560px, calc(100dvh - 160px));
+  margin: 96px auto auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+  color: var(--fg);
+  overflow: hidden;
+}
+
+.command-menu::backdrop {
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+}
+
+.command-menu[open] {
+  animation: command-enter 0.25s var(--ease);
+}
+
+@keyframes command-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.command-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+}
+
+.command-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 12px;
+}
+
+.command-close {
+  flex: none;
+  font-size: 13px;
+  background: var(--raised);
+}
+
+.command-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 64px;
+  padding: 0 24px;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--step-lede);
+}
+
+/* The field holds focus for as long as the menu is open; the caret marks it, a ring would only
+   frame the whole panel. */
+.command-input:focus-visible {
+  outline: none;
+}
+
+.command-input::placeholder {
+  color: var(--muted);
+}
+
+.command-results {
+  position: relative;
+  isolation: isolate;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  padding: 0 12px 12px;
+}
+
+.command-label {
+  padding: 16px 12px 8px;
+  font-family: var(--font-mono);
+  font-size: var(--step-meta);
+}
+
+.command-option {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: var(--radius-row);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.command-title {
+  flex: none;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.command-detail {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The selection: one surface that glides between results, like the site's lists. */
+.command-band {
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  z-index: -1;
+  height: var(--h, 0);
+  border-radius: var(--radius-row);
+  background: var(--raised);
+  transform: translateY(var(--y, 0));
+  transition:
+    transform 0.45s var(--ease),
+    height 0.45s var(--ease);
+  pointer-events: none;
+}
+
+.command-empty {
+  padding: 16px 12px;
+  color: var(--muted);
+}
+
+@media (max-width: 820px) {
+  .command-menu {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .command-panel {
+    height: 100%;
+  }
+
+  .command-detail {
+    display: none;
+  }
+
+  .command-title {
+    max-width: none;
+  }
+}

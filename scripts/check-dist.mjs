@@ -1,9 +1,10 @@
 // Checks the built site in dist/: every page has a language, a title, a description, one h1, a
 // canonical URL without .html (that address redirects), a Content-Security-Policy, share tags with
-// a 1200 by 630 card that exists in dist/, and JSON-LD that parses; the touch icon is 180 by 180;
-// no page loads a resource from another origin; the home page's HTML, CSS and JavaScript fit in 14
-// KB compressed, the first round trip of a new connection. Fonts are counted separately.
-// Placeholders ([LIKE THIS]) are reported as warnings until they're filled.
+// a 1200 by 630 card that exists in dist/, and JSON-LD that parses; the touch icon is 180 by 180
+// and the command menu's index parses; no page loads a resource from another origin; the home
+// page's HTML, CSS and JavaScript fit in 14 KB compressed, the first round trip of a new
+// connection. Fonts are counted separately. Placeholders ([LIKE THIS]) are reported as warnings
+// until they're filled.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -131,6 +132,19 @@ for (const file of all.filter((path) => path.endsWith('.css'))) {
 
 const touchIconSize = pngSize(join(DIST, 'apple-touch-icon.png'))
 if (touchIconSize !== '180 by 180') errors.push(`/apple-touch-icon.png is ${touchIconSize}`)
+
+// The command menu's index: every entry needs a title and somewhere to go or something to do.
+try {
+  const index = JSON.parse(readFileSync(join(DIST, 'search.json'), 'utf8'))
+  if (
+    !Array.isArray(index) ||
+    index.some((entry) => !entry.title || !(entry.href || entry.action))
+  ) {
+    errors.push('/search.json: an entry without a title, href or action')
+  }
+} catch (error) {
+  errors.push(`/search.json: ${error.code === 'ENOENT' ? 'missing' : 'does not parse'}`)
+}
 
 const home = readFileSync(join(DIST, 'index.html'), 'utf8')
 const homeBytes = pageBytes(home)

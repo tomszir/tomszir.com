@@ -38,6 +38,16 @@ const links = [
           }
         </ul>
       </nav>
+      <button
+        class="search-button button"
+        type="button"
+        aria-label="Search"
+        aria-keyshortcuts="Control+K Meta+K /"
+        data-search-button
+        hidden
+      >
+        <kbd data-search-shortcut>Ctrl K</kbd>
+      </button>
       <ThemeToggle />
       <button
         class="menu-button button"
@@ -67,6 +77,12 @@ const links = [
             </li>
           ))
         }
+        <li class="menu-search" style={{ '--i': links.length }} data-search-item hidden>
+          <button class="panel" type="button" data-search-button>
+            <span class="menu-title">Search</span>
+            <Icon name="arrow-right" size={18} class="panel-arrow" />
+          </button>
+        </li>
       </ol>
     </nav>
   </div>
@@ -135,6 +151,40 @@ const links = [
       if (event.matches && header.hasAttribute('data-menu-open')) setOpen(false)
     })
   }
+
+  // The command menu: Ctrl K or Cmd K anywhere, / outside text fields, or a search button. Its code
+  // and index load on first open (src/scripts/command-menu.ts).
+  const searchButtons = document.querySelectorAll<HTMLButtonElement>('[data-search-button]')
+  const shortcut = document.querySelector('[data-search-shortcut]')
+  if (shortcut && /Mac|iPhone|iPad/.test(navigator.userAgent)) shortcut.textContent = '⌘ K'
+
+  const openMenu = async () => {
+    if (header?.hasAttribute('data-menu-open')) button?.click()
+    // Kept out of Vite's graph on purpose; see src/pages/command-menu.js.ts.
+    const script = '/command-menu.js'
+    const commandMenu: typeof import('../scripts/command-menu') = await import(
+      /* @vite-ignore */ script
+    )
+    commandMenu.openMenu()
+  }
+  const typing = (target: EventTarget | null) =>
+    target instanceof HTMLElement &&
+    (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))
+
+  addEventListener('keydown', (event) => {
+    if (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey) && !event.altKey) {
+      event.preventDefault()
+      openMenu()
+    } else if (event.key === '/' && !event.metaKey && !event.ctrlKey && !typing(event.target)) {
+      event.preventDefault()
+      openMenu()
+    }
+  })
+  for (const searchButton of searchButtons) {
+    searchButton.addEventListener('click', openMenu)
+    searchButton.hidden = false
+  }
+  document.querySelector<HTMLElement>('[data-search-item]')?.removeAttribute('hidden')
 
   // The nav's highlight: one pill that rests under the current page and slides to the link under
   // the pointer or focus, then back on leaving. Where no link is current it appears at the link
@@ -312,6 +362,30 @@ const links = [
     display: inline-flex;
   }
 
+  .search-button {
+    padding: 0 12px;
+  }
+
+  .search-button kbd {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .search-button[hidden],
+  .menu-search[hidden] {
+    display: none;
+  }
+
+  .menu .panel:is(button) {
+    width: 100%;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
   .menu-button[hidden] {
     display: none;
   }
@@ -370,6 +444,10 @@ const links = [
 
   @media (max-width: 820px) {
     .site-header[data-menu-ready] .links {
+      display: none;
+    }
+
+    .site-header[data-menu-ready] .search-button {
       display: none;
     }
   }
