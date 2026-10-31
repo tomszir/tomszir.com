@@ -25,10 +25,7 @@ const links = [
     </div>
     <div class="end">
       <nav class="links" aria-label="Primary" data-nav>
-        <span class="blobs" aria-hidden="true">
-          <span class="blob" data-blob="current"></span>
-          <span class="blob" data-blob="hover"></span>
-        </span>
+        <span class="pill" aria-hidden="true" data-pill></span>
         <ul>
           {
             links.map((link) => (
@@ -40,17 +37,6 @@ const links = [
             ))
           }
         </ul>
-        <svg class="goo-filter" aria-hidden="true" focusable="false">
-          <filter id="nav-goo">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur"></feGaussianBlur>
-            <feColorMatrix
-              in="blur"
-              mode="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"
-              result="goo"></feColorMatrix>
-            <feComposite in="SourceGraphic" in2="goo" operator="atop"></feComposite>
-          </filter>
-        </svg>
       </nav>
       <ThemeToggle />
       <button
@@ -150,44 +136,38 @@ const links = [
     })
   }
 
-  // The nav's highlights: one pill under the current page, one that follows the pointer. They sit
-  // in a layer with a gooey SVG filter, so when the hover pill reaches the current one they join
-  // with a curved waist and pull apart again. On leaving, the hover pill slides back into the
-  // current one and is absorbed.
+  // The nav's highlight: one pill that rests under the current page and slides to the link under
+  // the pointer or focus, then back on leaving. Where no link is current it appears at the link
+  // rather than sliding in, and fades out on leaving.
   const nav = document.querySelector<HTMLElement>('[data-nav]')
-  const currentBlob = nav?.querySelector<HTMLElement>('[data-blob="current"]')
-  const hoverBlob = nav?.querySelector<HTMLElement>('[data-blob="hover"]')
+  const pill = nav?.querySelector<HTMLElement>('[data-pill]')
 
-  if (nav && currentBlob && hoverBlob) {
+  if (nav && pill) {
     const navLinks = [...nav.querySelectorAll<HTMLAnchorElement>('[data-nav-link]')]
     const current = navLinks.find((link) => link.getAttribute('aria-current') === 'page')
 
-    const put = (blob: HTMLElement, link: HTMLElement) => {
-      blob.style.setProperty('--x', `${link.offsetLeft}px`)
-      blob.style.setProperty('--w', `${link.offsetWidth}px`)
+    const put = (link: HTMLElement) => {
+      pill.style.setProperty('--x', `${link.offsetLeft}px`)
+      pill.style.setProperty('--w', `${link.offsetWidth}px`)
+    }
+
+    const jump = (link: HTMLElement) => {
+      pill.dataset.jump = ''
+      put(link)
+      pill.getBoundingClientRect()
+      delete pill.dataset.jump
     }
 
     const rest = () => {
-      if (current) put(hoverBlob, current)
-      hoverBlob.removeAttribute('data-on')
-    }
-
-    const place = () => {
-      if (current) {
-        put(currentBlob, current)
-        currentBlob.dataset.on = ''
-      }
-      rest()
+      if (current) put(current)
+      else delete pill.dataset.on
     }
 
     for (const link of navLinks) {
       const enter = () => {
-        // From rest, start at the link itself so the pill grows in place rather than sliding in.
-        if (!hoverBlob.hasAttribute('data-on') && !current) put(hoverBlob, link)
-        requestAnimationFrame(() => {
-          put(hoverBlob, link)
-          hoverBlob.dataset.on = ''
-        })
+        if (pill.hasAttribute('data-on')) put(link)
+        else jump(link)
+        pill.dataset.on = ''
       }
       link.addEventListener('pointerenter', enter)
       link.addEventListener('focus', enter)
@@ -198,10 +178,16 @@ const links = [
     nav.addEventListener('focusout', (event) => {
       if (!(event.relatedTarget instanceof Node && nav.contains(event.relatedTarget))) rest()
     })
+
+    const place = () => {
+      if (!current) return
+      jump(current)
+      pill.dataset.on = ''
+    }
     addEventListener('resize', place)
     document.fonts?.ready.then(place)
     place()
-    nav.dataset.blobsReady = ''
+    nav.dataset.pillReady = ''
   }
 </script>
 
@@ -265,23 +251,12 @@ const links = [
     display: flex;
   }
 
-  /* The highlight layer. The filter is what joins the pills; the text above it stays sharp. */
-  .blobs {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    filter: url('#nav-goo');
-    pointer-events: none;
-  }
-
-  /* Each pill is inset from its link, so neighbours keep a gap the filter bridges with a curved
-     neck instead of fusing into one block. */
-  .blob {
-    --inset: 5px;
+  .pill {
     position: absolute;
     top: 0;
-    left: var(--inset);
-    width: calc(var(--w, 0px) - 2 * var(--inset));
+    left: 0;
+    z-index: -1;
+    width: var(--w, 0px);
     height: 100%;
     border-radius: var(--radius-control);
     background: var(--panel);
@@ -291,21 +266,15 @@ const links = [
       transform 0.45s var(--ease),
       width 0.45s var(--ease),
       opacity 0.25s ease;
+    pointer-events: none;
   }
 
-  .blob[data-on] {
+  .pill[data-on] {
     opacity: 1;
   }
 
-  /* The current pill is always shown once placed; the hover one fades out into it. */
-  .blob[data-blob='current'][data-on] {
+  .pill[data-jump] {
     transition: none;
-  }
-
-  .goo-filter {
-    position: absolute;
-    width: 0;
-    height: 0;
   }
 
   .links a {
@@ -328,9 +297,9 @@ const links = [
     color: var(--fg);
   }
 
-  /* Without the script, plain backgrounds stand in for the pills. */
-  .links:not([data-blobs-ready]) a[aria-current='page'],
-  .links:not([data-blobs-ready]) a:hover {
+  /* Without the script, plain backgrounds stand in for the pill. */
+  .links:not([data-pill-ready]) a[aria-current='page'],
+  .links:not([data-pill-ready]) a:hover {
     background: var(--panel);
   }
 
