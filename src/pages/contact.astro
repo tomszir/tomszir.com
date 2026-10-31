@@ -4,7 +4,7 @@ import Base from '../layouts/Base.astro'
 import { site } from '../site'
 ---
 
-<Base title="Contact" description="How to reach Toms Zvirbulis: email, GitHub and the RSS feed.">
+<Base {...site.pages.contact}>
   <div class="container">
     <header class="page-head">
       <h1 class="page-title" style={{ viewTransitionName: 'page-contact' }}>Contact</h1>

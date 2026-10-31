@@ -7,7 +7,7 @@ import { site } from '../site'
 const products = await getProducts()
 ---
 
-<Base title="CV" description="Experience and skills of Toms Zvirbulis, software developer in Latvia.">
+<Base {...site.pages.cv}>
   <div class="container">
     <header class="page-head">
       <h1 class="page-title" style={{ viewTransitionName: 'page-cv' }}>CV</h1>

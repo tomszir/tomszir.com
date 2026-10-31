@@ -25,6 +25,25 @@ export const site = {
     { company: 'SIA DevLead', role: 'Developer', years: '2022-present' },
     { company: 'SIA EventFlow', role: 'Part-owner, full-stack developer', years: '2024-present' },
   ],
+  /** The section pages' titles and descriptions, read by the pages and their preview cards. */
+  pages: {
+    building: {
+      title: 'Building',
+      description: 'The products Toms Zvirbulis is building: Team Up and Zvirb.',
+    },
+    writing: {
+      title: 'Writing',
+      description: 'Notes and essays by Toms Zvirbulis on building software.',
+    },
+    cv: {
+      title: 'CV',
+      description: 'Experience and skills of Toms Zvirbulis, software developer in Latvia.',
+    },
+    contact: {
+      title: 'Contact',
+      description: 'How to reach Toms Zvirbulis: email, GitHub and the RSS feed.',
+    },
+  },
   skills: [
     { label: 'Languages', value: 'TypeScript, Go, Rust, Java, Kotlin, Python' },
     { label: 'Web', value: 'React, Spring Boot' },

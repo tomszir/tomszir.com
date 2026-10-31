@@ -2,11 +2,12 @@
 import PostList from '../../components/PostList.astro'
 import Base from '../../layouts/Base.astro'
 import { getPosts } from '../../lib/posts'
+import { site } from '../../site'
 
 const posts = await getPosts()
 ---
 
-<Base title="Writing" description="Notes and essays by Toms Zvirbulis on building software.">
+<Base {...site.pages.writing}>
   <div class="container">
     <header class="page-head">
       <h1 class="page-title" style={{ viewTransitionName: 'page-writing' }}>Writing</h1>
