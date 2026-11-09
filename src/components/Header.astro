@@ -1,30 +1,31 @@
 ---
+import { langOf, localePath, t } from '../i18n'
 import { site } from '../site'
 import Icon from './Icon.astro'
+import LanguageSwitch from './LanguageSwitch.astro'
 import ThemeToggle from './ThemeToggle.astro'
 
 // With file output the build sees `/building.html`, the dev server `/building`.
 const path = Astro.url.pathname.replace(/\.html$/, '')
-const links = [
-  { number: '01', href: '/building', label: 'Building' },
-  { number: '02', href: '/writing', label: 'Writing' },
-  { number: '03', href: '/cv', label: 'CV' },
-  { number: '04', href: '/contact', label: 'Contact' },
-].map((link) => ({
-  ...link,
-  current: path === link.href || path.startsWith(`${link.href}/`),
-}))
+const lang = langOf(path)
+const text = t(lang)
+const links = (['building', 'writing', 'cv', 'contact'] as const)
+  .map((page) => ({ href: localePath(lang, `/${page}`), label: text.nav[page] }))
+  .map((link) => ({
+    ...link,
+    current: path === link.href || path.startsWith(`${link.href}/`),
+  }))
 ---
 
 <header class="site-header no-print" data-header>
   <div class="container bar">
     <div class="start">
-      <a class="mark" href="/" aria-label={`${site.name}, home`}>
+      <a class="mark" href={localePath(lang, '/')} aria-label={`${site.name}, ${text.home}`}>
         <span class="square" aria-hidden="true"></span>tomszir
       </a>
     </div>
     <div class="end">
-      <nav class="links" aria-label="Primary" data-nav>
+      <nav class="links" aria-label={text.primary} data-nav>
         <span class="pill" aria-hidden="true" data-pill></span>
         <ul>
           {
@@ -41,13 +42,14 @@ const links = [
       <button
         class="search-button button"
         type="button"
-        aria-label="Search"
+        aria-label={text.search}
         aria-keyshortcuts="Control+K Meta+K /"
         data-search-button
         hidden
       >
         <kbd data-search-shortcut>Ctrl K</kbd>
       </button>
+      <LanguageSwitch />
       <ThemeToggle />
       <button
         class="menu-button button"
@@ -55,17 +57,19 @@ const links = [
         aria-expanded="false"
         aria-controls="menu"
         data-menu-button
+        data-label-open={text.close}
+        data-label-closed={text.menu}
         hidden
       >
         <Icon name="menu" class="when-closed" />
         <Icon name="x" class="when-open" />
-        <span data-menu-label>Menu</span>
+        <span data-menu-label>{text.menu}</span>
       </button>
     </div>
   </div>
 
   <div class="menu" id="menu" data-menu hidden>
-    <nav class="container" aria-label="Menu">
+    <nav class="container" aria-label={text.menu}>
       <ol>
         {
           links.map((link, index) => (
@@ -79,7 +83,7 @@ const links = [
         }
         <li class="menu-search" style={{ '--i': links.length }} data-search-item hidden>
           <button class="panel" type="button" data-search-button>
-            <span class="menu-title">Search</span>
+            <span class="menu-title">{text.search}</span>
             <Icon name="arrow-right" size={18} class="panel-arrow" />
           </button>
         </li>
@@ -128,7 +132,7 @@ const links = [
     const setOpen = (open: boolean) => {
       button.setAttribute('aria-expanded', String(open))
       const label = button.querySelector('[data-menu-label]')
-      if (label) label.textContent = open ? 'Close' : 'Menu'
+      if (label) label.textContent = (open ? button.dataset.labelOpen : button.dataset.labelClosed) ?? ''
       header.toggleAttribute('data-menu-open', open)
       document.documentElement.toggleAttribute('data-menu-open', open)
       for (const el of outside()) el.inert = open
@@ -271,7 +275,13 @@ const links = [
   }
 
   .end {
+    justify-content: flex-end;
     gap: 8px;
+  }
+
+  /* Without JavaScript the links stay in the bar on a narrow screen, so the controls wrap below. */
+  .site-header:not([data-menu-ready]) .end {
+    flex-wrap: wrap;
   }
 
   .mark {

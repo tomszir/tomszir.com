@@ -58,22 +58,22 @@ const linkCommit = (html, sha) =>
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const now = new Date()
-  const facts = {
-    commit: commit(),
-    date: new Intl.DateTimeFormat('en-GB', {
+  /** The build date in a page's language: `9 Nov 2026`, `2026. g. 9. nov.` */
+  const dateIn = (lang) =>
+    new Intl.DateTimeFormat(lang === 'lv' ? 'lv' : 'en-GB', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
       timeZone: 'Europe/Riga',
-    }).format(now),
-  }
+    }).format(now)
+  const facts = { commit: commit(), date: dateIn('en') }
 
   for (const file of files(DIST).filter((path) => path.endsWith('.html'))) {
     let html = readFileSync(file, 'utf8')
     if (!html.includes('data-build=')) continue
     html = fill(html, 'commit', facts.commit)
     if (facts.commit !== 'uncommitted') html = linkCommit(html, facts.commit)
-    html = fill(html, 'date', facts.date)
+    html = fill(html, 'date', dateIn(html.match(/<html[^>]*\slang="([a-z-]+)"/)?.[1]))
     // Writing the size in changes the size; a second pass settles it.
     for (let pass = 0; pass < 2; pass++) {
       const kb = (pageBytes(html) / 1024).toFixed(1)

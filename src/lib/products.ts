@@ -1,4 +1,5 @@
 import { type CollectionEntry, getCollection } from 'astro:content'
+import type { Lang } from '../i18n'
 
 export type Product = CollectionEntry<'building'>
 
@@ -6,6 +7,12 @@ export async function getProducts(): Promise<Product[]> {
   const products = await getCollection('building')
   return products.sort((a, b) => a.data.order - b.data.order)
 }
+
+/** A product's description, who it's with, role and status in the page's language. */
+export const productText = ({ data }: Product, lang: Lang) =>
+  lang === 'lv'
+    ? data.lv
+    : { description: data.description, with: data.with, role: data.role, status: data.status }
 
 export type WriteUp = CollectionEntry<'writeUps'>
 

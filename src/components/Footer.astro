@@ -1,25 +1,28 @@
 ---
+import { langOf, t } from '../i18n'
 import { site } from '../site'
 import Icon from './Icon.astro'
+
+const { footer } = t(langOf(Astro.url.pathname))
 ---
 
 <footer class="container no-print">
   <div class="links">
-    <a class="button" href={`mailto:${site.email}`}><Icon name="mail" />Email</a>
+    <a class="button" href={`mailto:${site.email}`}><Icon name="mail" />{footer.email}</a>
     <a class="button" href={site.github}><Icon name="github" />GitHub</a>
     <a class="button" href="/rss.xml"><Icon name="rss" />RSS</a>
   </div>
   <div class="build meta muted">
     <p>
-      Built <data data-build="date" value="">–</data> from <a
+      {footer.built} <data data-build="date" value="">–</data> {footer.from} <a
         class="link"
         href={`${site.source}/commits/main`}
         data-build-link="commit"><data data-build="commit" value="">–</data></a
       > · <data data-build="page-kb" value="">–</data> KB
     </p>
     <p>
-      Every number here is measured at build time or computed in your browser.{' '}
-      <a class="link" href={site.source}>Source</a>
+      {footer.measured}{' '}
+      <a class="link" href={site.source}>{footer.source}</a>
     </p>
   </div>
 </footer>

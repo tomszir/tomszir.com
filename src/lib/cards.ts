@@ -2,13 +2,18 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { Resvg } from '@resvg/resvg-js'
 import satori from 'satori'
+import { type Lang, langs, t } from '../i18n'
 import { site } from '../site'
 import { formatDate, getPosts } from './posts'
 import { getProducts } from './products'
 
-/** A page's preview card: `path` is the page's path without the leading slash, `index` for `/`. */
+/**
+ * A page's preview card: `path` is the page's path without the leading slash, `index` for `/` and
+ * `lv` for `/lv`.
+ */
 export interface Card {
   path: string
+  lang: Lang
   label: string
   title: string
   description: string
@@ -17,37 +22,43 @@ export interface Card {
 const CARD_WIDTH = 1200
 const CARD_HEIGHT = 630
 
-/** Every page with its own card. The 404 page shares the home page's. */
+/** Every page with its own card. A 404 page shares its home page's. */
 export async function getCards(): Promise<Card[]> {
-  const role = site.facts.find((fact) => fact.label === 'Role')?.value
-  const sections = Object.entries(site.pages).map(([path, page]) => ({
-    path,
-    label: site.name,
-    ...page,
-  }))
+  const pages = langs.flatMap((lang) => {
+    const prefix = lang === 'en' ? '' : `${lang}/`
+    // While Toms is open to work, the cards most likely to be shared with a recruiter say so.
+    const open = site.availability.open && `${t(lang).availability.open} · ${site.place[lang]}`
+    return [
+      {
+        path: lang === 'en' ? 'index' : lang,
+        lang,
+        label: open || `${site.role[lang]} · ${site.place[lang]}`,
+        title: site.name,
+        description: site.description[lang],
+      },
+      ...Object.entries(site.pages).map(([path, page]) => ({
+        path: `${prefix}${path}`,
+        lang,
+        label: (path === 'cv' && open) || site.name,
+        ...page[lang],
+      })),
+    ]
+  })
   const posts = (await getPosts()).map((post) => ({
     path: `writing/${post.id}`,
+    lang: 'en' as const,
     label: `Writing · ${formatDate(post.data.published)}`,
     title: post.data.title,
     description: post.data.description,
   }))
   const products = (await getProducts()).map((product) => ({
     path: `building/${product.id}`,
+    lang: 'en' as const,
     label: `Building · ${product.data.role}`,
     title: product.data.name,
     description: product.data.description,
   }))
-  return [
-    {
-      path: 'index',
-      label: `${role} · ${site.place}`,
-      title: site.name,
-      description: site.description,
-    },
-    ...sections,
-    ...posts,
-    ...products,
-  ]
+  return [...pages, ...posts, ...products]
 }
 
 // The build runs from the repository root; bundling moves this module, so paths start there.

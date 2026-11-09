@@ -1,13 +1,15 @@
-// Checks the built site in dist/: every page has a language, a title, a description, one h1, a
-// canonical URL without .html (that address redirects), a Content-Security-Policy, share tags with
-// a 1200 by 630 card that exists in dist/, and JSON-LD that parses; the touch icon is 180 by 180
-// and the command menu's index parses; no page loads a resource from another origin; the home
-// page's HTML, CSS and JavaScript fit in 14 KB compressed, the first round trip of a new
-// connection. Fonts are counted separately. Placeholders ([LIKE THIS]) are reported as warnings
-// until they're filled.
+// Checks the built site in dist/: every page has a language that matches its address (`lv` under
+// /lv), a title, a description, one h1, a canonical URL without .html (that address redirects), a
+// Content-Security-Policy, share tags with a 1200 by 630 card that exists in dist/, and JSON-LD
+// that parses; translated pairs name each other with hreflang; the touch icon is 180 by 180 and
+// the command menu's index parses; no page loads a resource from another origin; both home pages'
+// HTML, CSS and JavaScript fit in 14 KB compressed, the first round trip of a new connection.
+// Fonts are counted separately. Placeholders ([LIKE THIS]) are reported as warnings until they're
+// filled.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { inflateRawSync } from 'node:zlib'
 import { pageBytes } from './stamp-build.mjs'
 
 const DIST = fileURLToPath(new URL('../dist', import.meta.url))
@@ -65,15 +67,69 @@ const visibleText = (html) =>
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
 
+/** A page's `hreflang` alternates, as "lang url" strings, sorted. */
+const alternates = (html) =>
+  [...html.matchAll(/<link\b[^>]*rel=["']alternate["'][^>]*>/gi)]
+    .map(([tag]) => [attribute(tag, 'hreflang'), attribute(tag, 'href')])
+    .filter(([lang]) => lang)
+    .map(([lang, href]) => `${lang} ${href}`)
+    .sort()
+
+/** The built page for one of the site's URLs: `/` is index.html, `/lv/cv` is lv/cv.html. */
+const pageFor = (url) => {
+  const path = new URL(url).pathname
+  return `/${path === '/' ? 'index' : path.slice(1)}.html`
+}
+
+/** Names an anonymised CV must not print: the clients, their products and their domains. */
+const CLIENT_NAMES = [
+  /\bRode\b/,
+  /DCS Flow/i,
+  /Valsts kase/i,
+  /State Treasury/i,
+  /\bTIS2\b/,
+  /elieta/i,
+  /Patentu valde/i,
+  /Patent Office/,
+  /Tiesu administrācija/i,
+  /POLICE CLIENT/,
+]
+
+/** One file out of a zip, such as `word/document.xml` out of a .docx, found by its central directory entry. */
+function unzip(path, name) {
+  const zip = readFileSync(path)
+  const end = zip.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]))
+  let entry = zip.readUInt32LE(end + 16)
+  for (let i = 0; i < zip.readUInt16LE(end + 10); i++) {
+    const method = zip.readUInt16LE(entry + 10)
+    const size = zip.readUInt32LE(entry + 20)
+    const nameLength = zip.readUInt16LE(entry + 28)
+    const extra = zip.readUInt16LE(entry + 30) + zip.readUInt16LE(entry + 32)
+    if (zip.toString('utf8', entry + 46, entry + 46 + nameLength) === name) {
+      const local = zip.readUInt32LE(entry + 42)
+      const start = local + 30 + zip.readUInt16LE(local + 26) + zip.readUInt16LE(local + 28)
+      const data = zip.subarray(start, start + size)
+      return (method === 8 ? inflateRawSync(data) : data).toString('utf8')
+    }
+    entry += 46 + nameLength + extra
+  }
+  return undefined
+}
+
 const errors = []
 const warnings = []
 const all = files(DIST)
+const alternatesByPage = new Map()
 
 for (const file of all.filter((path) => path.endsWith('.html'))) {
   const page = `/${relative(DIST, file)}`
   const html = readFileSync(file, 'utf8')
 
-  if (!/<html[^>]*\slang=["'][a-z-]+["']/i.test(html)) errors.push(`${page}: no lang on <html>`)
+  const lang = html.match(/<html[^>]*\slang=["']([a-z-]+)["']/i)?.[1]
+  const expected = /^\/lv(\/|\.html$)/.test(page) ? 'lv' : 'en'
+  if (!lang) errors.push(`${page}: no lang on <html>`)
+  else if (lang !== expected) errors.push(`${page}: lang is ${lang}, expected ${expected}`)
+  alternatesByPage.set(page, alternates(html))
   if (!/<title>[^<]+<\/title>/i.test(html)) errors.push(`${page}: no <title>`)
   if (!/<meta\s+name=["']description["']\s+content=["'][^"']+["']/i.test(html)) {
     errors.push(`${page}: no meta description`)
@@ -130,6 +186,45 @@ for (const file of all.filter((path) => path.endsWith('.css'))) {
   }
 }
 
+// A translated pair names both versions and English as the default, and each names the same three.
+for (const [page, links] of alternatesByPage) {
+  if (links.length === 0) continue
+  const langs = links.map((link) => link.split(' ')[0]).join(', ')
+  if (langs !== 'en, lv, x-default')
+    errors.push(`${page}: alternates ${langs}, expected en, lv, x-default`)
+  for (const link of links) {
+    const other = pageFor(link.split(' ')[1])
+    const back = alternatesByPage.get(other)
+    if (!back) errors.push(`${page}: alternate ${other} doesn't exist`)
+    else if (back.join() !== links.join()) errors.push(`${page} and ${other}: alternates differ`)
+  }
+}
+
+// The CV in Word, one per language, holding the same words as the page.
+const cvTexts = new Map()
+for (const file of ['cv.docx', 'lv/cv.docx']) {
+  const xml = existsSync(join(DIST, file)) && unzip(join(DIST, file), 'word/document.xml')
+  if (!xml) errors.push(`/${file}: missing or not a Word document`)
+  else cvTexts.set(`/${file}`, xml.replace(/<[^>]+>/g, ''))
+}
+
+// While the CV is anonymised no client name may appear anywhere: pages, Word files, the search index.
+if (readFileSync(join(DIST, 'cv.html'), 'utf8').includes('data-clients="anonymous"')) {
+  const texts = [
+    ...all
+      .filter((path) => path.endsWith('.html'))
+      .map((path) => [`/${relative(DIST, path)}`, visibleText(readFileSync(path, 'utf8'))]),
+    ...cvTexts,
+    ['/search.json', readFileSync(join(DIST, 'search.json'), 'utf8')],
+  ]
+  for (const [page, text] of texts) {
+    for (const name of CLIENT_NAMES) {
+      const found = text.match(name)?.[0]
+      if (found) errors.push(`${page}: names the client "${found}" while the CV is anonymised`)
+    }
+  }
+}
+
 const touchIconSize = pngSize(join(DIST, 'apple-touch-icon.png'))
 if (touchIconSize !== '180 by 180') errors.push(`/apple-touch-icon.png is ${touchIconSize}`)
 
@@ -146,14 +241,17 @@ try {
   errors.push(`/search.json: ${error.code === 'ENOENT' ? 'missing' : 'does not parse'}`)
 }
 
-const home = readFileSync(join(DIST, 'index.html'), 'utf8')
-const homeBytes = pageBytes(home)
-const homeSummary = `home page: ${(homeBytes / 1024).toFixed(1)} KB of HTML, CSS and JS compressed (budget ${HOME_BUDGET / 1024} KB)`
-if (homeBytes > HOME_BUDGET) errors.push(homeSummary)
+// Both home pages, English and Latvian, fit the budget.
+const homeSummaries = ['index.html', 'lv.html'].map((file) => {
+  const bytes = pageBytes(readFileSync(join(DIST, file), 'utf8'))
+  const summary = `/${file}: ${(bytes / 1024).toFixed(1)} KB of HTML, CSS and JS compressed (budget ${HOME_BUDGET / 1024} KB)`
+  if (bytes > HOME_BUDGET) errors.push(summary)
+  return summary
+})
 
 for (const warning of warnings) console.warn(`warning  ${warning}`)
 for (const error of errors) console.error(`error    ${error}`)
-console.log(homeSummary)
+for (const summary of homeSummaries) console.log(summary)
 
 if (errors.length > 0) {
   console.error(`check-dist: ${errors.length} error(s)`)

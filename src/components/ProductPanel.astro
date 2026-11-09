@@ -1,5 +1,6 @@
 ---
-import type { Product } from '../lib/products'
+import { langOf, t } from '../i18n'
+import { type Product, productText } from '../lib/products'
 import Icon from './Icon.astro'
 
 interface Props {
@@ -8,7 +9,10 @@ interface Props {
 }
 
 const { product, label } = Astro.props
-const { name, description, role, status } = product.data
+const lang = langOf(Astro.url.pathname)
+const { product: labels } = t(lang)
+const { name } = product.data
+const { description, role, status } = productText(product, lang)
 ---
 
 <a class="panel product" href={`/building/${product.id}`}>
@@ -20,11 +24,11 @@ const { name, description, role, status } = product.data
   </span>
   <dl class="meta facts">
     <div>
-      <dt>Role</dt>
+      <dt>{labels.role}</dt>
       <dd>{role}</dd>
     </div>
     <div>
-      <dt>Status</dt>
+      <dt>{labels.status}</dt>
       <dd>{status}</dd>
     </div>
   </dl>

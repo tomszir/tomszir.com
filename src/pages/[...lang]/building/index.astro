@@ -1,0 +1,43 @@
+---
+import ProductPanel from '../../../components/ProductPanel.astro'
+import { langOf, langPaths, t } from '../../../i18n'
+import Base from '../../../layouts/Base.astro'
+import { getProducts, productText } from '../../../lib/products'
+import { site } from '../../../site'
+
+export const getStaticPaths = langPaths
+
+const lang = langOf(Astro.url.pathname)
+const page = site.pages.building[lang]
+const products = await getProducts()
+---
+
+<Base {...page}>
+  <div class="container">
+    <header class="page-head">
+      <h1 class="page-title" style={{ viewTransitionName: 'page-building' }}>{page.title}</h1>
+      <p class="lede">{t(lang).building.lede}</p>
+    </header>
+    <div class="grid">
+      {
+        products.map((product) => (
+          <ProductPanel product={product} label={productText(product, lang).with} />
+        ))
+      }
+    </div>
+  </div>
+</Base>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  @media (max-width: 760px) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

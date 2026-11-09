@@ -1,0 +1,414 @@
+---
+import Icon from '../../components/Icon.astro'
+import JsonLd from '../../components/JsonLd.astro'
+import { langOf, langPaths, localePath, t } from '../../i18n'
+import Base from '../../layouts/Base.astro'
+import { getCv } from '../../lib/cv'
+import { personData } from '../../lib/structured-data'
+import { site } from '../../site'
+
+export const getStaticPaths = langPaths
+
+const lang = langOf(Astro.url.pathname)
+const page = site.pages.cv[lang]
+const { cv, availability: labels } = t(lang)
+const content = await getCv(lang)
+---
+
+<Base {...page}>
+  <JsonLd slot="head" data={personData(lang)} />
+  <div class="container" data-clients={site.clients.named ? 'named' : 'anonymous'}>
+    <header class="page-head">
+      <h1 class="page-title" style={{ viewTransitionName: 'page-cv' }}>
+        <span class="no-print">{page.title}</span><span class="print-only">{content.name}</span>
+      </h1>
+      <p class="lede">
+        <span class="no-print">{`${content.name}. `}</span>{`${content.headline}.`}
+      </p>
+      <p class="summary">{content.summary}</p>
+      <ul class="contact" aria-label={cv.contact}>
+        {
+          content.contact.map((link) => (
+            <li>
+              <a class="link target" href={link.href}>
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="actions no-print">
+        {
+          content.availability && (
+            <a class="button button-primary" href={`mailto:${site.email}`}>
+              <Icon name="mail" />
+              {labels.email}
+            </a>
+          )
+        }
+        <a class="button" href={localePath(lang, '/cv.docx')} download={cv.file}>
+          <Icon name="download" />{cv.download}
+        </a>
+        <button class="button" type="button" data-print hidden>
+          <Icon name="printer" />{cv.print}
+        </button>
+      </div>
+    </header>
+
+    {
+      content.availability && (
+        <section class="section first" aria-labelledby="availability">
+          <h2 id="availability" class="section-label">
+            {labels.label}
+          </h2>
+          <dl class="facts">
+            {content.availability.map((fact, index) => (
+              <div class="fact">
+                <dt>{fact.label}</dt>
+                <dd class:list={{ status: index === 0 }}>{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )
+    }
+
+    <section class:list={['section', { first: !content.availability }]} aria-labelledby="skills">
+      <h2 id="skills" class="section-label">{cv.skills}</h2>
+      <dl class="facts">
+        {
+          content.skills.map((skill) => (
+            <div class="fact">
+              <dt>{skill.label}</dt>
+              <dd>{skill.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <section class="section" aria-labelledby="experience">
+      <h2 id="experience" class="section-label">{cv.experience}</h2>
+      <ol class="jobs">
+        {
+          content.jobs.map((job) => (
+            <li class="job">
+              <div class="row">
+                <h3 class="row-title">{job.company}</h3>
+                <span class="meta muted">{job.years}</span>
+                <span class="row-note">{job.role}</span>
+              </div>
+              <p class="intro">{job.intro}</p>
+              {job.highlights.length > 0 && (
+                <ul class="highlights">
+                  {job.highlights.map((highlight) => (
+                    <li>{highlight}</li>
+                  ))}
+                </ul>
+              )}
+              {job.clients.map((client) => (
+                <div class="client">
+                  <h4 class="client-name">{`${client.name} (${client.when})`}</h4>
+                  <ul class="highlights">
+                    {client.highlights.map((highlight) => (
+                      <li>{highlight}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="section" aria-labelledby="building">
+      <h2 id="building" class="section-label">{cv.building}</h2>
+      <ul>
+        {
+          content.building.map((product) => (
+            <li class="row">
+              <a class="row-title link" href={product.href}>
+                {product.name}
+              </a>
+              <span class="meta muted">{product.role}</span>
+              <span class="row-note">{product.description}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="section" aria-labelledby="languages">
+      <h2 id="languages" class="section-label">{cv.languages}</h2>
+      <dl class="facts">
+        {
+          content.languages.map((language) => (
+            <div class="fact">
+              <dt>{language.label}</dt>
+              <dd>{language.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <section class="section" aria-labelledby="education">
+      <h2 id="education" class="section-label">{cv.education}</h2>
+      <ul>
+        {
+          content.education.map((study) => (
+            <li class="row">
+              <span class="row-title">{study.school}</span>
+              <span class="meta muted">{study.years}</span>
+              <span class="row-note">{`${study.field}. ${study.note}`}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+</Base>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('[data-print]')
+  if (button) {
+    button.hidden = false
+    button.addEventListener('click', () => window.print())
+  }
+</script>
+
+<style>
+  .summary {
+    max-width: 60ch;
+    font-size: var(--step-lede);
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+  }
+
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 24px;
+    font-size: 17px;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .status {
+    font-weight: 500;
+  }
+
+  .button[hidden],
+  .print-only {
+    display: none;
+  }
+
+  .first {
+    padding-top: 24px;
+  }
+
+  .row-title.link,
+  .target {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .fact {
+    padding-block: 4px;
+  }
+
+  .jobs {
+    display: grid;
+    gap: 40px;
+  }
+
+  .job .row {
+    padding-bottom: 8px;
+  }
+
+  .intro {
+    color: var(--muted);
+  }
+
+  .highlights {
+    display: grid;
+    gap: 12px;
+    max-width: var(--measure);
+    margin-top: 16px;
+    padding-left: 1.1em;
+    list-style: disc;
+  }
+
+  .highlights li::marker {
+    color: var(--muted);
+  }
+
+  .client {
+    margin-top: 24px;
+  }
+
+  .client-name {
+    margin: 0;
+    font-size: inherit;
+    font-weight: 600;
+  }
+
+  .client .highlights {
+    margin-top: 8px;
+  }
+
+  /* On paper the CV is a plain document: Times New Roman, the reader's own copy, one column. */
+  @media print {
+    :global(body),
+    :global(body) * {
+      font-family: 'Times New Roman', Times, 'Liberation Serif', serif !important;
+      letter-spacing: 0 !important;
+    }
+
+    :global(body) {
+      font-size: 10.5pt;
+      line-height: 1.3;
+    }
+
+    .print-only {
+      display: inline;
+    }
+
+    .page-head {
+      gap: 4pt;
+      padding-block: 0 8pt;
+    }
+
+    .page-title {
+      font-size: 20pt;
+      line-height: 1.1;
+    }
+
+    .lede,
+    .summary,
+    .contact {
+      max-width: none;
+      font-size: 10.5pt;
+      color: #000000;
+    }
+
+    .contact {
+      gap: 0 14pt;
+    }
+
+    .target,
+    .row-title.link {
+      min-height: 0;
+    }
+
+    .link {
+      color: #000000;
+      text-decoration-color: #000000;
+      text-decoration-thickness: 0.5pt;
+    }
+
+    .section {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4pt;
+      padding-top: 8pt;
+    }
+
+    .first {
+      padding-top: 6pt;
+    }
+
+    .section-label {
+      padding: 0 0 2pt;
+      font-size: 12pt;
+      font-weight: 700;
+      color: #000000;
+      text-transform: uppercase;
+      border-bottom: 0.75pt solid #000000;
+    }
+
+    .fact {
+      grid-template-columns: 110pt minmax(0, 1fr);
+      gap: 8pt;
+      padding-block: 0;
+    }
+
+    .fact dt,
+    .fact dd,
+    .row-title,
+    .row-note,
+    .meta,
+    .intro {
+      font-size: 10.5pt;
+      color: #000000;
+    }
+
+    .row {
+      margin: 0;
+      padding: 2pt 0;
+      break-inside: avoid;
+    }
+
+    .row-title {
+      font-weight: 700;
+    }
+
+    .row-note {
+      grid-column: 1 / -1;
+    }
+
+    /* Chromium misplaces a grid item that follows one split across pages, so on paper the jobs
+       stack as blocks. */
+    .jobs {
+      display: block;
+    }
+
+    .job + .job {
+      margin-top: 8pt;
+    }
+
+    .job .row {
+      padding-bottom: 0;
+      break-after: avoid;
+    }
+
+    .intro {
+      font-style: italic;
+      break-before: avoid;
+      break-after: avoid;
+    }
+
+    .highlights {
+      gap: 3pt;
+      max-width: none;
+      margin-top: 4pt;
+    }
+
+    .highlights li {
+      break-inside: avoid;
+    }
+
+    .client {
+      margin-top: 6pt;
+    }
+
+    .client-name {
+      font-size: 10.5pt;
+      break-after: avoid;
+    }
+
+    .client .highlights {
+      margin-top: 2pt;
+    }
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm 18mm;
+  }
+</style>

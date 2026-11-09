@@ -9,16 +9,19 @@ import { site } from '../site'
  * posts and write-ups, and the site's actions.
  */
 export async function GET() {
-  const pages = (await getCards()).map((card) => ({
-    group: card.path.startsWith('writing/')
-      ? 'Writing'
-      : card.path.startsWith('building/')
-        ? 'Building'
-        : 'Pages',
-    title: card.title,
-    detail: card.description,
-    href: card.path === 'index' ? '/' : `/${card.path}`,
-  }))
+  // The menu is English, so it lists the English pages only.
+  const pages = (await getCards())
+    .filter((card) => card.lang === 'en')
+    .map((card) => ({
+      group: card.path.startsWith('writing/')
+        ? 'Writing'
+        : card.path.startsWith('building/')
+          ? 'Building'
+          : 'Pages',
+      title: card.title,
+      detail: card.description,
+      href: card.path === 'index' ? '/' : `/${card.path}`,
+    }))
 
   const articles = [
     ...(await getPosts()).map((post) => ({

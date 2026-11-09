@@ -54,6 +54,8 @@ export default defineConfig({
   integrations: [
     mdx(),
     sitemap({
+      // The integration leaves out /404 itself, but not the Latvian one.
+      filter: (page) => !page.endsWith('/lv/404'),
       serialize: (item) => {
         const date = postDates.get(item.url)
         return date ? { ...item, lastmod: new Date(date).toISOString() } : item

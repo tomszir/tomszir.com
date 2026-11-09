@@ -1,0 +1,21 @@
+---
+import { langOf, localePath, t } from '../i18n'
+import Base from '../layouts/Base.astro'
+
+const lang = langOf(Astro.url.pathname)
+const { notFound } = t(lang)
+---
+
+<Base title={notFound.title} description={notFound.description}>
+  <div class="container">
+    <header class="page-head">
+      <p class="meta muted">404</p>
+      <h1 class="page-title">{notFound.heading}</h1>
+      <p class="lede">
+        {notFound.before} <a class="link" href={localePath(lang, '/')}>{notFound.home}</a>
+        {notFound.or}{' '}
+        <a class="link" href={localePath(lang, '/writing')}>{notFound.writing}</a>.
+      </p>
+    </header>
+  </div>
+</Base>

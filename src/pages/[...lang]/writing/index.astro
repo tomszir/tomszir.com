@@ -1,0 +1,25 @@
+---
+import PostList from '../../../components/PostList.astro'
+import { langOf, langPaths, t } from '../../../i18n'
+import Base from '../../../layouts/Base.astro'
+import { getPosts } from '../../../lib/posts'
+import { site } from '../../../site'
+
+export const getStaticPaths = langPaths
+
+const lang = langOf(Astro.url.pathname)
+const page = site.pages.writing[lang]
+const { writing } = t(lang)
+const posts = await getPosts()
+---
+
+<Base {...page}>
+  <div class="container">
+    <header class="page-head">
+      <h1 class="page-title" style={{ viewTransitionName: 'page-writing' }}>{page.title}</h1>
+      <p class="lede">{`${writing.lede} ${writing.count(posts.length)}`}</p>
+      <a class="back" href="/rss.xml">{writing.rss}</a>
+    </header>
+    <PostList posts={posts} />
+  </div>
+</Base>

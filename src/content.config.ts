@@ -25,6 +25,13 @@ const building = defineCollection({
     status: z.string(),
     stack: z.string().optional(),
     order: z.number(),
+    /** The words of the card in Latvian, for the Latvian pages; the product page stays English. */
+    lv: z.object({
+      description: z.string(),
+      with: z.string(),
+      role: z.string(),
+      status: z.string(),
+    }),
   }),
 })
 

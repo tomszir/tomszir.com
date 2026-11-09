@@ -29,8 +29,8 @@ function update() {
   const elevation = sunElevation(new Date())
 
   for (const el of document.querySelectorAll('[data-sun]')) el.textContent = elevation.toFixed(1)
-  for (const el of document.querySelectorAll('[data-sun-word]')) {
-    el.textContent = elevation > 0 ? 'above the horizon' : 'below the horizon'
+  for (const el of document.querySelectorAll<HTMLElement>('[data-sun-word]')) {
+    el.textContent = (elevation > 0 ? el.dataset.above : el.dataset.below) ?? ''
   }
   for (const el of document.querySelectorAll<HTMLElement>('[data-sun-wrap]')) el.hidden = false
 }

@@ -2,6 +2,7 @@
 import { Font } from 'astro:assets'
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
+import { englishPath, langOf, localePath, t, translated } from '../i18n'
 import { site } from '../site'
 import '../styles/global.css'
 
@@ -12,21 +13,28 @@ interface Props {
   article?: { published: Date; updated?: Date | undefined }
 }
 
-const { title, description = site.description, article } = Astro.props
+const lang = langOf(Astro.url.pathname)
+const { title, description = site.description[lang], article } = Astro.props
 const pageTitle = title ? `${title} · ${site.name}` : site.name
 // Pages are built as files (`/cv.html`) but served without the extension, and the .html
 // address redirects, so the canonical URL drops it.
-const canonical = new URL(Astro.url.pathname.replace(/(index)?\.html$/, ''), Astro.site)
-// Each page's preview card, from src/pages/og/; the 404 page has none of its own.
-const cardPath = canonical.pathname.slice(1)
-const card = new URL(
-  `/og/${cardPath === '' || cardPath === '404' ? 'index' : cardPath}.png`,
-  Astro.site,
-)
+const canonical = new URL(Astro.url.pathname.replace(/(\/?index)?\.html$/, '') || '/', Astro.site)
+// Each page's preview card, from src/pages/og/; a 404 page shares its home page's.
+const cardPath = canonical.pathname.slice(1).replace(/(^|\/)404$/, '')
+const card = new URL(`/og/${cardPath || 'index'}.png`, Astro.site)
+// A translated page names both versions, English as the default; English-only pages name none.
+const english = englishPath(canonical.pathname)
+const alternates = translated.includes(english)
+  ? [
+      { hreflang: 'en', href: new URL(english, Astro.site) },
+      { hreflang: 'lv', href: new URL(localePath('lv', english), Astro.site) },
+      { hreflang: 'x-default', href: new URL(english, Astro.site) },
+    ]
+  : []
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -34,6 +42,7 @@ const card = new URL(
     <meta name="description" content={description} />
     <meta name="author" content={site.name} />
     <link rel="canonical" href={canonical} />
+    {alternates.map((link) => <link rel="alternate" hreflang={link.hreflang} href={link.href} />)}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="alternate" type="application/rss+xml" title={`${site.name}: writing`} href="/rss.xml" />
@@ -85,7 +94,7 @@ const card = new URL(
     <slot name="head" />
   </head>
   <body>
-    <a class="skip meta" href="#content">Skip to content</a>
+    <a class="skip meta" href="#content">{t(lang).skip}</a>
     <Header />
     <main id="content" tabindex="-1">
       <slot />

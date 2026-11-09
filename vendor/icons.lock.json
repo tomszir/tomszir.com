@@ -28,6 +28,7 @@
     { "name": "check", "source": "lucide" },
     { "name": "rss", "source": "lucide" },
     { "name": "mail", "source": "lucide" },
+    { "name": "download", "source": "lucide" },
     { "name": "printer", "source": "lucide" },
     { "name": "github", "source": "simple-icons" }
   ]

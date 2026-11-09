@@ -15,10 +15,10 @@ interface Props {
 const { name, size = 16, class: className } = Astro.props
 const svg = icons[`../icons/${name}.svg`]
 if (!svg) throw new Error(`No icon "${name}" in src/icons; add it to vendor/icons.lock.json`)
-const sized = svg.replace(
-  '<svg ',
-  `<svg width="${size}" height="${size}" aria-hidden="true" focusable="false" `,
-)
+// Inline SVG in HTML needs no namespace, and `focusable` only ever mattered to IE.
+const sized = svg
+  .replace(' xmlns="http://www.w3.org/2000/svg"', '')
+  .replace('<svg ', `<svg width="${size}" height="${size}" aria-hidden="true" `)
 ---
 
 <span class:list={['icon', className]} set:html={sized} />

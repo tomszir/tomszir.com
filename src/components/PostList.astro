@@ -1,4 +1,5 @@
 ---
+import { langOf, t } from '../i18n'
 import { formatDate, type Post, readingMinutes } from '../lib/posts'
 import Icon from './Icon.astro'
 
@@ -7,6 +8,8 @@ interface Props {
 }
 
 const { posts } = Astro.props
+const lang = langOf(Astro.url.pathname)
+const text = t(lang)
 ---
 
 {
@@ -14,9 +17,21 @@ const { posts } = Astro.props
     <ol data-glide>
       {posts.map((post) => (
         <li>
-          <a class="row" href={`/writing/${post.id}`} data-glide-item>
+          <a
+            class="row"
+            href={`/writing/${post.id}`}
+            hreflang={lang === 'en' ? undefined : 'en'}
+            data-glide-item
+          >
             <span class="row-title" style={{ viewTransitionName: `post-${post.id}` }}>
-              {post.data.title}
+              {lang === 'en' ? (
+                post.data.title
+              ) : (
+                <>
+                  <span lang="en">{post.data.title}</span>{' '}
+                  <span class="meta muted">{text.english}</span>
+                </>
+              )}
             </span>
             <span class="meta muted">
               <time datetime={post.data.published.toISOString()}>
@@ -24,7 +39,9 @@ const { posts } = Astro.props
               </time>
               {` · ${readingMinutes(post)} min`}
             </span>
-            <span class="row-note">{post.data.description}</span>
+            <span class="row-note" lang={lang === 'en' ? undefined : 'en'}>
+              {post.data.description}
+            </span>
           </a>
         </li>
       ))}
@@ -32,11 +49,11 @@ const { posts } = Astro.props
   ) : (
     <div class="panel empty">
       <p>
-        Nothing published yet. <span class="muted">The first write-up is on its way.</span>
+        {text.empty.nothing} <span class="muted">{text.empty.onItsWay}</span>
       </p>
       <a class="button" href="/rss.xml">
         <Icon name="rss" />
-        Get it by RSS
+        {text.empty.rss}
       </a>
     </div>
   )

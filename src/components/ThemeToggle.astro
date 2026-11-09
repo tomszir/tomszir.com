@@ -1,8 +1,19 @@
 ---
+import { langOf, t } from '../i18n'
 import Icon from './Icon.astro'
+
+const { theme } = t(langOf(Astro.url.pathname))
 ---
 
-<button class="toggle button" type="button" data-theme-toggle hidden aria-label="Switch theme">
+<button
+  class="toggle button"
+  type="button"
+  data-theme-toggle
+  data-label-dark={theme.dark}
+  data-label-light={theme.light}
+  hidden
+  aria-label={theme.idle}
+>
   <Icon name="moon" class="moon" />
   <Icon name="sun" class="sun" />
 </button>
@@ -28,7 +39,11 @@ import Icon from './Icon.astro'
   }
 
   if (button) {
-    const label = () => button.setAttribute('aria-label', `Switch to ${other(current())} theme`)
+    const label = () =>
+      button.setAttribute(
+        'aria-label',
+        button.dataset[other(current()) === 'dark' ? 'labelDark' : 'labelLight'] ?? '',
+      )
 
     const apply = (theme: Theme) => {
       root.dataset.theme = theme

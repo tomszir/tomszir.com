@@ -1,0 +1,80 @@
+---
+import { langOf, switchPath, t } from '../i18n'
+
+// With file output the build sees `/cv.html`, the dev server `/cv`.
+const path = Astro.url.pathname.replace(/(\/?index)?\.html$/, '') || '/'
+const lang = langOf(path)
+const options = [
+  { lang: 'en', code: 'EN', name: 'English' },
+  { lang: 'lv', code: 'LV', name: 'Latviski' },
+] as const
+---
+
+<div class="switch" role="group" aria-label={t(lang).language} data-current={lang}>
+  <span class="mark" aria-hidden="true"></span>
+  {
+    options.map((option) => (
+      <a
+        href={switchPath(path, option.lang)}
+        hreflang={option.lang}
+        lang={option.lang}
+        aria-label={option.name}
+        aria-current={option.lang === lang ? 'true' : undefined}
+      >
+        {option.code}
+      </a>
+    ))
+  }
+</div>
+
+<style>
+  /* Both languages on one --panel track, the current one on a --raised mark. The mark moves to the
+     other language under the pointer or focus, timed like the nav pill. */
+  .switch {
+    position: relative;
+    isolation: isolate;
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 4px;
+    border-radius: var(--radius-control);
+    background: var(--panel);
+  }
+
+  .mark {
+    position: absolute;
+    inset: 4px auto 4px 4px;
+    z-index: -1;
+    width: calc(50% - 4px);
+    border-radius: calc(var(--radius-control) - 2px);
+    background: var(--raised);
+    transition: transform 0.45s var(--ease);
+  }
+
+  .switch[data-current='lv'] .mark,
+  .switch[data-current='en']:has(a:not([aria-current]):is(:hover, :focus-visible)) .mark {
+    transform: translateX(100%);
+  }
+
+  .switch[data-current='lv']:has(a:not([aria-current]):is(:hover, :focus-visible)) .mark {
+    transform: none;
+  }
+
+  a {
+    display: grid;
+    place-items: center;
+    min-width: 42px;
+    min-height: 36px;
+    padding: 0 10px;
+    border-radius: calc(var(--radius-control) - 2px);
+    font-family: var(--font-mono);
+    font-size: var(--step-meta);
+    font-weight: 500;
+    color: var(--muted);
+    transition: color 0.2s ease;
+  }
+
+  a[aria-current],
+  a:hover {
+    color: var(--fg);
+  }
+</style>
