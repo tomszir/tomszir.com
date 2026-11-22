@@ -1,0 +1,150 @@
+---
+title: Running AI coding agents overnight on a homelab VM
+description: A small Debian VM on my Proxmox box where coding agents work through the night, what I gave it access to, and the two bugs between me and my phone.
+published: 2026-11-22
+draft: true
+---
+
+import Decision from '../../components/write-up/Decision.astro'
+import Flow from '../../components/write-up/Flow.astro'
+
+{/* TODO(tomszir): set the real publish date before turning draft off. */}
+
+I wanted coding agents to keep working after I close the laptop lid. Not on everything, and not with the keys to everything. The setup I ended up with is T3 Code on my desktop, a small Debian VM on a Proxmox mini PC in the corner, and a rule that nothing the agents do reaches `main` until I've read it in the morning.
+
+## The machine
+
+The Proxmox host is a mini PC with an i5-6500. It already runs the rest of my homelab, so the agents get a slice of it, not the whole thing. The VM runs Debian 13 with 4 vCPUs, 4 GB of RAM and a 4 GB swap file.
+
+It's meant for web projects like this site, Go and .NET. Rust and Bevy stay on the desktop.
+
+{/* TODO(tomszir): one sentence on why Rust/Bevy stays on the desktop. */}
+
+{/* TODO(tomszir): add a real build time on the VM, e.g. `mise run check` for this site, to back up "enough". */}
+
+<Decision
+  chosen="A separate VM for the agents"
+  instead="Running them on my desktop, where all my projects already are"
+>
+  My desktop is logged in to everything, including the homelab. The VM holds no homelab credentials
+  at all. The agents run as an unprivileged user, clone from GitHub and push branches or open pull
+  requests back to it. Its only credential is one SSH key on GitHub, so the worst a confused agent
+  can do is push a bad branch.
+</Decision>
+
+That last point is the one I care about most. An agent that misreads a task should cost me a closed pull request, not an afternoon of checking what it touched. If something goes very wrong I can delete the VM, remove one key from GitHub and lose nothing else.
+
+## Swap on a 4 GB VM
+
+Swap on a small VM can sound like a mistake. When memory runs out, I'd normally rather the kernel kill the process quickly than let the machine crawl. I've seen the other outcome, though.
+
+A CI VM of mine had 6 GB of RAM and no swap. During an Android Gradle build it didn't kill the job. The whole VM hung instead.
+
+{/* TODO(tomszir): how long it hung and how you got it back, if you remember. */}
+
+<Decision chosen="A 4 GB swap file" instead="No swap, and trusting the OOM killer">
+  Without it, I've had a VM hang instead of killing the job, and an agent can't recover from a
+  machine that has stopped answering. Swap gives a build that runs out of memory somewhere to go
+  besides a hang.
+</Decision>
+
+{/* TODO(tomszir): add the swappiness setting if you changed it from Debian's default. */}
+
+## Linking the VM to T3 Code
+
+T3 Code links to remote machines, so a thread can run on the VM while I watch it from the desktop. My first try was the VM's address over plain HTTP, on my own network. T3 refused to link it. It wants HTTPS, even on a LAN.
+
+So the VM sits behind Traefik, which I already run in the homelab. Traefik has a wildcard Let's Encrypt certificate for my home subdomain, obtained through a DNS challenge. Let's Encrypt only has to see a DNS record, not reach anything in my house, so nothing is exposed to the internet and the certificate is still a real one.
+
+For the phone I use T3 Connect, so I can check on a thread or answer a question an agent has from bed without opening anything to the internet.
+
+{/* TODO(tomszir): one sentence on how T3 Connect reaches the VM, if you want to explain it. */}
+
+<Flow
+  caption="How a task gets from me to a pull request."
+  links={['HTTPS', 'X-Forwarded-Proto: https', 'git push']}
+  steps={[
+    { title: 'T3 Code', note: 'On the desktop, or through T3 Connect on the phone. One thread per task.' },
+    { title: 'Traefik', note: 'Terminates TLS with the wildcard certificate and fixes the forwarded scheme.', focus: true },
+    { title: 'Debian 13 VM', note: '4 vCPU, 4 GB RAM, 4 GB swap. Agents run as an unprivileged user.' },
+    { title: 'GitHub', note: 'One SSH key. The agent pushes a branch and opens a pull request.' },
+  ]}
+/>
+
+## The 401 on every WebSocket
+
+With Traefik in front, T3 accepted the link, and then the app's WebSocket connections failed with a 401.
+
+The cause was one word in one header. T3 authenticates the WebSocket with a DPoP proof, which is bound to the exact URL it was made for: `https://…/ws`. A DPoP proof is a small token the client signs for one request, naming the method and the URL it's for. A proof captured on its way to one URL is useless anywhere else, which is the point, and it also means the server has to agree with the client about what the URL was. Behind a proxy, the server has to rebuild that URL to check the proof, so it reads the scheme from `X-Forwarded-Proto`. T3 only trusts that header when it is exactly `https`.
+
+Traefik sets `X-Forwarded-Proto` to `wss` for WebSocket upgrades. That's not wrong, but it isn't `https`, so T3 ignored the header and rebuilt the URL with the wrong scheme. The URL didn't match the proof, and the proof failed.
+
+The fix is a headers middleware that sets the header to `https` on that route:
+
+```yaml
+http:
+  middlewares:
+    t3-forwarded-https:
+      headers:
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+
+  routers:
+    t3-vm:
+      rule: Host(`t3.home.example`) # TODO(tomszir): the real hostname
+      entryPoints:
+        - websecure
+      middlewares:
+        - t3-forwarded-https
+      service: t3-vm
+      tls:
+        certResolver: letsencrypt # TODO(tomszir): your resolver's name
+
+  services:
+    t3-vm:
+      loadBalancer:
+        servers:
+          - url: http://10.0.0.0:0000 # TODO(tomszir): the VM's address and T3's port
+```
+
+It applies to every request on the route, not only the upgrades. That's fine, since everything that reaches this router came in over HTTPS anyway.
+
+{/* TODO(tomszir): confirm the entry point and resolver names match your Traefik config. */}
+
+## The hostname that didn't exist
+
+T3 Connect needed a new hostname, and at first it didn't resolve. My home DNS server had cached an answer saying the name doesn't exist, and it kept handing that answer out.
+
+Nothing was wrong with the record. Flushing the DNS server's cache fixed it. A "doesn't exist" answer gets cached like any other, which is easy to forget when you've only just created the name.
+
+{/* TODO(tomszir): name the DNS server (Pi-hole, AdGuard Home, Unbound…) and how long the negative answer would have been cached. */}
+
+## What the agents are allowed to do
+
+T3 lets you choose how much a linked machine's agents can do without asking. I set it to auto, not full access.
+
+<Decision chosen="Auto access on the linked VM" instead="Full access">
+  Agents can do the work, but they can't reconfigure the VM they run on. An agent that decides the
+  fix is to change the system is a change I want to see before it happens, not in the morning.
+</Decision>
+
+{/* TODO(tomszir): list one or two concrete things auto stops that full access would allow. */}
+
+## How I hand out the work
+
+The setup only pays off if the tasks are shaped for it. I follow four rules:
+
+- **One task per thread.** A thread that fixes a bug and then refactors something nearby is two pull requests I can't review separately.
+- **A clear "done when".** Every task ends with a check the agent can run itself. On this site that's `mise run check` passing. Without one, an agent decides it's done when it runs out of ideas.
+- **One pull request at the end.** The agent works on a branch, pushes it and opens a single pull request. It never pushes to `main`.
+- **Reviewed in the morning.** I read every pull request before I merge it. It's the same review I'd give a colleague's code.
+
+The "done when" rule matters most. A check the agent can run itself turns "make it better" into a task with an end. Without it, I'd wake up to work I couldn't judge. It also keeps the morning short: if the check passed on the agent's branch, I spend my review on whether the change is the right one, not on whether it builds.
+
+{/* TODO(tomszir): add real numbers: how many tasks a typical night gets, and how many pull requests end up merged as they are. */}
+
+## What's next
+
+The VM has been doing this for TODO(tomszir) weeks.
+
+{/* TODO(tomszir): what you plan to change or try next, if anything. */}
