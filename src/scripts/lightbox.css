@@ -1,0 +1,311 @@
+/* The picture viewer (src/scripts/lightbox.ts). Loaded with it, by pages that show a gallery. */
+
+html[data-viewer-open] {
+  overflow: hidden;
+}
+
+.lightbox {
+  --column: min(70vw, 100vw - 2 * var(--gutter));
+  --room: calc(100dvh - 96px - 16px - 72px);
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 48px 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+}
+
+.lightbox[open] {
+  display: grid;
+  place-items: center;
+  animation: lightbox-in 0.25s var(--ease);
+}
+
+/* The page stays in view, faded and blurred. */
+.lightbox::backdrop {
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.lightbox[open]::backdrop {
+  animation: lightbox-fade 0.25s ease;
+}
+
+/* Closing mirrors the opening, a little quicker; the script closes the dialog after. Keyframes of
+   their own: reusing the opening's name would only retune that finished animation. */
+.lightbox[data-closing] {
+  animation: lightbox-out 0.2s ease-in forwards;
+}
+
+.lightbox[data-closing]::backdrop {
+  animation: lightbox-fade-out 0.2s ease-in forwards;
+}
+
+.lightbox-figure {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  margin: 0;
+}
+
+.lightbox-holder {
+  position: relative;
+}
+
+/* A panel of one fixed size, from the first picture's shape (--ratio, set by the script) and the
+   room left by the padding and the caption, so changing pictures never moves anything. */
+.lightbox-frame {
+  position: relative;
+  display: flex;
+  width: min(var(--column), var(--room) * var(--ratio, 1.6));
+  aspect-ratio: var(--ratio, 16 / 10);
+  box-sizing: border-box;
+  padding: 8px;
+  border-radius: var(--radius-panel);
+  background: var(--panel);
+  touch-action: none;
+  user-select: none;
+  cursor: zoom-in;
+}
+
+/* The pictures slide inside the panel and are cut at its inner edge. */
+.lightbox-window {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--radius-row);
+}
+
+.lightbox-track {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+}
+
+.lightbox-slide {
+  display: flex;
+  flex: 0 0 100%;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.lightbox-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Zoomed, the current picture is all there is: it fills the screen, which scrolls over it. */
+.lightbox[data-zoomed] .lightbox-frame {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  aspect-ratio: auto;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: grab;
+}
+
+.lightbox[data-zoomed] .lightbox-frame:active {
+  cursor: grabbing;
+}
+
+.lightbox[data-zoomed] .lightbox-window {
+  border-radius: 0;
+}
+
+.lightbox[data-zoomed] .lightbox-slide:not([data-current]) {
+  display: none;
+}
+
+.lightbox[data-zoomed] .lightbox-slide {
+  overflow: auto;
+}
+
+.lightbox[data-zoomed] .lightbox-image {
+  flex: none;
+  max-width: none;
+  height: auto;
+  margin: auto;
+}
+
+.lightbox[data-zoomed] :is(.lightbox-control, .lightbox-side, .lightbox-caption) {
+  visibility: hidden;
+}
+
+.lightbox-caption {
+  /* Two lines kept, so a one-line caption doesn't move the picture. */
+  min-height: 3em;
+  max-width: min(66ch, var(--column));
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* A control's look: a blurred raised chip. */
+.lightbox-control {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-row);
+  background: color-mix(in srgb, var(--raised) 80%, transparent);
+  backdrop-filter: blur(12px);
+  color: var(--fg);
+  cursor: pointer;
+  transition:
+    opacity 0.25s ease,
+    background-color 0.2s ease;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1;
+}
+
+.lightbox-close:hover,
+.lightbox-side:hover .lightbox-control {
+  background: var(--raised);
+}
+
+.lightbox-count {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  z-index: 1;
+  width: auto;
+  height: auto;
+  padding: 6px 12px;
+  translate: -50% 0;
+  font-family: var(--font-mono);
+  font-size: var(--step-meta);
+  cursor: default;
+}
+
+/* The side buttons sit outside the panel: a box well past the chip, so they don't need aim, but
+   short of the panel's height, so a click beside the picture still closes the viewer. */
+.lightbox-side {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 160px;
+  translate: 0 -50%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  cursor: pointer;
+  transition: opacity 0.25s ease;
+}
+
+.lightbox-previous {
+  right: 100%;
+}
+
+.lightbox-previous .icon {
+  rotate: 180deg;
+}
+
+.lightbox-next {
+  left: 100%;
+}
+
+.lightbox[data-idle] :is(.lightbox-close, .lightbox-count, .lightbox-side):not(:focus-visible),
+.lightbox-side:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes lightbox-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes lightbox-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes lightbox-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes lightbox-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+/* On a phone: no panel and no side buttons, just the pictures, which slide under a finger. */
+@media (max-width: 720px) {
+  .lightbox {
+    --column: calc(100vw - 2 * var(--gutter));
+    --room: calc(100dvh - 32px - 120px);
+    padding: 16px 0;
+  }
+
+  .lightbox-frame {
+    padding: 0;
+    background: none;
+  }
+
+  .lightbox-side {
+    display: none;
+  }
+
+  .lightbox-close {
+    top: 12px;
+    right: 12px;
+  }
+
+  .lightbox-count {
+    bottom: 12px;
+  }
+
+  /* Captions wrap further on a phone: three lines kept. */
+  .lightbox-caption {
+    min-height: 4.5em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox[open],
+  .lightbox[open]::backdrop,
+  .lightbox[data-closing],
+  .lightbox[data-closing]::backdrop {
+    animation: none;
+  }
+
+  .lightbox-control,
+  .lightbox-side {
+    transition: none;
+  }
+}
+
+/* A picture in an article's text opens the viewer. */
+.lightbox-zoomable {
+  cursor: zoom-in;
+}
+
+.lightbox-image.pixels {
+  image-rendering: pixelated;
+}

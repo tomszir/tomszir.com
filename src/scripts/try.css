@@ -1,0 +1,48 @@
+/* What the demo would have done, over it at the top, clear of the bar and the tour's card below. */
+.try-note {
+  position: fixed;
+  top: max(20px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 2147483001;
+  max-width: min(560px, calc(100vw - 32px));
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: var(--radius-control);
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  translate: -50% -8px;
+  transition:
+    opacity 0.2s ease,
+    translate 0.25s var(--ease);
+}
+
+.try-note[data-on] {
+  opacity: 1;
+  translate: -50% 0;
+}
+
+/* After the tour, the first install button pulses twice. */
+[data-pulse] {
+  animation: try-pulse 1.2s var(--ease) 2;
+}
+
+@keyframes try-pulse {
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .try-note {
+    transition: none;
+  }
+
+  [data-pulse] {
+    animation: none;
+  }
+}

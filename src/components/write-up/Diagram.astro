@@ -1,0 +1,336 @@
+---
+/**
+ * Parties and the arrows between them, laid out on a character grid so every line is straight or
+ * turns a right angle and nothing overlaps. Drawn as graph paper (`paper`), or as plain text the
+ * way old protocol documents were (`text`), from the same layout.
+ *
+ * A node sits at a cell (`x`, `y`) and spans `w` cells, three rows tall, with an optional second
+ * line (`sub`); a person (`kind: 'actor'`) has round ends. A group is a labelled region round
+ * nodes that belong together. An edge is a path of cells that starts and ends on the cell next to a
+ * node; the arrowhead takes its last cell (and its first, with `both`), `dashed` marks a path taken
+ * only sometimes, and its `label` starts at the cell `at`. Steps light their edges (`step`, from 1)
+ * and the nodes they name.
+ *
+ * Complete without JavaScript: every arrow numbered and the steps listed under it. With
+ * `/diagram.js` (src/scripts/diagram.ts) an interactive diagram becomes a canvas that steps, zooms
+ * and pans, its controls in the panel. Styled in prose.css, and its icons inlined rather than
+ * through Icon.astro: a style block of its own would add a hash to every page's policy.
+ */
+import chevronLeft from '../../icons/chevron-left.svg?raw'
+import chevronRight from '../../icons/chevron-right.svg?raw'
+import minus from '../../icons/minus.svg?raw'
+import plus from '../../icons/plus.svg?raw'
+import scan from '../../icons/scan.svg?raw'
+
+interface Node {
+  id: string
+  label: string
+  sub?: string
+  kind?: 'actor'
+  x: number
+  y: number
+  w: number
+}
+
+interface Group {
+  label: string
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+interface Edge {
+  step: number
+  path: [number, number][]
+  label?: string
+  at?: [number, number]
+  both?: boolean
+  dashed?: boolean
+}
+
+interface Step {
+  title: string
+  text: string
+  nodes: string[]
+}
+
+interface Props {
+  width: number
+  height: number
+  nodes: Node[]
+  groups?: Group[]
+  edges: Edge[]
+  steps: Step[]
+  caption: string
+  drawn?: 'paper' | 'text'
+  interactive?: boolean
+}
+
+const {
+  width,
+  height,
+  nodes,
+  groups = [],
+  edges,
+  steps,
+  caption,
+  drawn = 'paper',
+  interactive = true,
+} = Astro.props
+
+const sign = (n: number) => Math.sign(n) as -1 | 0 | 1
+/** Every cell a path passes through, with the direction it's travelling there. */
+function walk(path: [number, number][]) {
+  const cells: { x: number; y: number; dx: number; dy: number; corner: boolean }[] = []
+  path.forEach(([x, y], index) => {
+    const next = path[index + 1]
+    const prev = path[index - 1]
+    if (!next) {
+      if (prev) cells.push({ x, y, dx: sign(x - prev[0]), dy: sign(y - prev[1]), corner: false })
+      return
+    }
+    const dx = sign(next[0] - x)
+    const dy = sign(next[1] - y)
+    for (let cx = x, cy = y; cx !== next[0] || cy !== next[1]; cx += dx, cy += dy) {
+      cells.push({ x: cx, y: cy, dx, dy, corner: index > 0 && cx === x && cy === y })
+    }
+  })
+  return cells
+}
+
+// The plain-text drawing: one character and one owner (a node or a step) per cell.
+const chars = Array.from({ length: height }, () => Array<string>(width).fill(' '))
+const owner = Array.from({ length: height }, () => Array<string>(width).fill(''))
+const put = (x: number, y: number, char: string, by: string) => {
+  const row = chars[y]
+  if (row && x >= 0 && x < width) {
+    row[x] = char
+    ;(owner[y] as string[])[x] = by
+  }
+}
+for (const group of groups) {
+  for (let i = 0; i < group.w; i++) {
+    put(group.x + i, group.y, '.', '')
+    put(group.x + i, group.y + group.h - 1, '.', '')
+  }
+  for (let j = 1; j < group.h - 1; j++) {
+    put(group.x, group.y + j, ':', '')
+    put(group.x + group.w - 1, group.y + j, ':', '')
+  }
+  ;[...` ${group.label} `].forEach((char, i) => {
+    put(group.x + 2 + i, group.y, char, '')
+  })
+}
+for (const node of nodes) {
+  const by = `n:${node.id}`
+  const rule = `+${'-'.repeat(node.w - 2)}+`
+  ;[...rule].forEach((char, i) => {
+    put(node.x + i, node.y, char, by)
+    put(node.x + i, node.y + 2, char, by)
+  })
+  put(node.x, node.y + 1, '|', by)
+  put(node.x + node.w - 1, node.y + 1, '|', by)
+  const pad = Math.floor((node.w - 2 - node.label.length) / 2)
+  ;[...node.label].forEach((char, i) => {
+    put(node.x + 1 + pad + i, node.y + 1, char, by)
+  })
+}
+const head = (dx: number, dy: number) => (dx > 0 ? '>' : dx < 0 ? '<' : dy > 0 ? 'v' : '^')
+for (const edge of edges) {
+  const by = `e:${edge.step}`
+  const cells = walk(edge.path)
+  cells.forEach((cell, i) => {
+    const line = cell.dx ? (edge.dashed && i % 2 ? ' ' : '-') : edge.dashed ? ':' : '|'
+    put(cell.x, cell.y, cell.corner ? '+' : line, by)
+  })
+  const last = cells.at(-1)
+  const first = cells[0]
+  if (last) put(last.x, last.y, head(last.dx, last.dy), by)
+  if (edge.both && first) put(first.x, first.y, head(-first.dx, -first.dy), by)
+  if (edge.label && edge.at) {
+    const [lx, ly] = edge.at
+    ;[...`${edge.step} ${edge.label}`].forEach((char, i) => {
+      put(lx + i, ly, char, by)
+    })
+  }
+}
+// Runs of one owner per row, so each becomes one span.
+const rows = chars.map((row, y) => {
+  const runs: { text: string; by: string }[] = []
+  row.forEach((char, x) => {
+    const by = (owner[y] as string[])[x] ?? ''
+    const run = runs.at(-1)
+    if (run && run.by === by) run.text += char
+    else runs.push({ text: char, by })
+  })
+  const end = runs.at(-1)
+  if (end && !end.by) end.text = end.text.trimEnd()
+  return runs
+})
+const escapeHtml = (text: string) =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+// One string, so no markup formatting can add space between the lines.
+const drawing = rows
+  .map((runs) =>
+    runs
+      .map(({ text, by }) => {
+        if (!by) return escapeHtml(text)
+        const attr = by.startsWith('n:')
+          ? `data-node="${by.slice(2)}"`
+          : `data-step="${by.slice(2)}"`
+        return `<span ${attr}>${escapeHtml(text)}</span>`
+      })
+      .join(''),
+  )
+  .join('\n')
+
+// The graph-paper drawing, from the same cells.
+const CW = 10
+const CH = 20
+const cx = (x: number) => x * CW + CW / 2
+const cy = (y: number) => y * CH + CH / 2
+/** A path through cell centres, its ends pushed half a cell on to meet the nodes. */
+function line(edge: Edge) {
+  const points = edge.path.map(([x, y]) => [cx(x), cy(y)])
+  const reach = (end: number[], toward: number[]) => {
+    const dx = sign((end[0] ?? 0) - (toward[0] ?? 0))
+    const dy = sign((end[1] ?? 0) - (toward[1] ?? 0))
+    return [(end[0] ?? 0) + (dx * CW) / 2, (end[1] ?? 0) + (dy * CH) / 2]
+  }
+  const n = points.length
+  const ends = [
+    reach(points[0] as number[], points[1] as number[]),
+    ...points.slice(1, -1),
+    reach(points[n - 1] as number[], points[n - 2] as number[]),
+  ]
+  return `M${ends.map(([x, y]) => `${x} ${y}`).join(' L')}`
+}
+// Each arrow's route through the grid, start to arrowhead, for the text drawing's moving star.
+const routes = JSON.stringify(
+  edges.map((edge) => ({
+    step: edge.step,
+    both: edge.both ?? false,
+    cells: walk(edge.path).map(({ x, y }) => [x, y]),
+  })),
+)
+// One id per diagram, the same on every build.
+const icon = (svg: string) =>
+  svg.replace('<svg ', '<svg width="16" height="16" aria-hidden="true" ')
+const id = `d${[...caption].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 7).toString(36)}`
+---
+
+<figure
+  class:list={['diagram', `diagram-${drawn}`]}
+  data-diagram={interactive ? JSON.stringify(steps.map(({ nodes }) => nodes)) : undefined}
+>
+  <div class="diagram-panel">
+    <div class="diagram-board" data-board aria-label={caption}>
+      <div class="diagram-canvas" data-canvas>
+        {
+          drawn === 'text' ? (
+            <div
+              class="diagram-chars"
+              aria-hidden="true"
+              data-routes={routes}
+              set:html={drawing}
+            />
+          ) : (
+            <svg viewBox={`0 0 ${width * CW} ${height * CH}`} aria-hidden="true">
+              <defs>
+                <marker
+                  id={`${id}-head`}
+                  viewBox="0 0 10 10"
+                  refX="8"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M0 0 10 5 0 10z" fill="context-stroke" />
+                </marker>
+              </defs>
+              {groups.map((group) => (
+                <g class="diagram-group">
+                  <rect
+                    x={group.x * CW}
+                    y={group.y * CH}
+                    width={group.w * CW}
+                    height={group.h * CH}
+                    rx="12"
+                  />
+                  <text x={group.x * CW + 12} y={group.y * CH + 14}>
+                    {group.label}
+                  </text>
+                </g>
+              ))}
+              {edges.map((edge) => (
+                <g
+                  class:list={['diagram-edge', { dashed: edge.dashed }]}
+                  data-step={edge.step}
+                  data-both={edge.both ? '' : undefined}
+                >
+                  <path
+                    d={line(edge)}
+                    marker-end={`url(#${id}-head)`}
+                    marker-start={edge.both ? `url(#${id}-head)` : undefined}
+                  />
+                  {edge.label && edge.at && (
+                    <text x={edge.at[0] * CW} y={cy(edge.at[1])}>
+                      {`${edge.step} ${edge.label}`}
+                    </text>
+                  )}
+                </g>
+              ))}
+              {nodes.map((node) => (
+                <g class="diagram-node" data-node={node.id}>
+                  <rect
+                    x={node.x * CW}
+                    y={node.y * CH + 4}
+                    width={node.w * CW}
+                    height={3 * CH - 8}
+                    rx={node.kind === 'actor' ? (3 * CH - 8) / 2 : 8}
+                  />
+                  <text x={(node.x + node.w / 2) * CW} y={cy(node.y + 1) - (node.sub ? 7 : 0)}>
+                    {node.label}
+                  </text>
+                  {node.sub && (
+                    <text class="sub" x={(node.x + node.w / 2) * CW} y={cy(node.y + 1) + 9}>
+                      {node.sub}
+                    </text>
+                  )}
+                </g>
+              ))}
+            </svg>
+          )
+        }
+      </div>
+      <div class="diagram-tools" hidden>
+        <button type="button" aria-label="Zoom in" data-zoom="1" set:html={icon(plus)} />
+        <button type="button" aria-label="Zoom out" data-zoom="-1" set:html={icon(minus)} />
+        <button type="button" aria-label="Fit to view" data-fit set:html={icon(scan)} />
+      </div>
+    </div>
+    <div class="diagram-bar" hidden>
+      <p class="diagram-now" aria-live="polite"></p>
+      <div class="diagram-nav">
+        <button type="button" aria-label="Previous step" data-back set:html={icon(chevronLeft)} />
+        <span class="diagram-dots">
+          {steps.map((_, index) => <button type="button" aria-label={`Step ${index + 1}`} data-go={index} />)}
+        </span>
+        <button type="button" aria-label="Next step" data-next set:html={icon(chevronRight)} />
+      </div>
+    </div>
+  </div>
+  <ol class="diagram-steps">
+    {
+      steps.map((step) => (
+        <li>
+          <b>{step.title}.</b> {step.text}
+        </li>
+      ))
+    }
+  </ol>
+  <figcaption class="meta muted">{caption}</figcaption>
+</figure>
+<script is:inline type="module" src="/diagram.js"></script>

@@ -1,8 +1,8 @@
 // Checks the built site in dist/: every page has a language that matches its address (`lv` under
 // /lv), a title, a description, one h1, a canonical URL without .html (that address redirects), a
 // Content-Security-Policy, share tags with a 1200 by 630 card that exists in dist/, and JSON-LD
-// that parses; translated pairs name each other with hreflang; the touch icon is 180 by 180 and
-// the command menu's index parses; no page loads a resource from another origin; both home pages'
+// that parses; translated pairs name each other with hreflang; the touch icon is 180 by 180; no
+// page loads a resource from another origin; both home pages'
 // HTML, CSS and JavaScript fit in 14 KB compressed, the first round trip of a new connection.
 // Fonts are counted separately. Placeholders ([LIKE THIS]) are reported as warnings until they're
 // filled.
@@ -208,14 +208,13 @@ for (const file of ['cv.docx', 'lv/cv.docx']) {
   else cvTexts.set(`/${file}`, xml.replace(/<[^>]+>/g, ''))
 }
 
-// While the CV is anonymised no client name may appear anywhere: pages, Word files, the search index.
+// While the CV is anonymised no client name may appear anywhere: pages and Word files.
 if (readFileSync(join(DIST, 'cv.html'), 'utf8').includes('data-clients="anonymous"')) {
   const texts = [
     ...all
       .filter((path) => path.endsWith('.html'))
       .map((path) => [`/${relative(DIST, path)}`, visibleText(readFileSync(path, 'utf8'))]),
     ...cvTexts,
-    ['/search.json', readFileSync(join(DIST, 'search.json'), 'utf8')],
   ]
   for (const [page, text] of texts) {
     for (const name of CLIENT_NAMES) {
@@ -227,19 +226,6 @@ if (readFileSync(join(DIST, 'cv.html'), 'utf8').includes('data-clients="anonymou
 
 const touchIconSize = pngSize(join(DIST, 'apple-touch-icon.png'))
 if (touchIconSize !== '180 by 180') errors.push(`/apple-touch-icon.png is ${touchIconSize}`)
-
-// The command menu's index: every entry needs a title and somewhere to go or something to do.
-try {
-  const index = JSON.parse(readFileSync(join(DIST, 'search.json'), 'utf8'))
-  if (
-    !Array.isArray(index) ||
-    index.some((entry) => !entry.title || !(entry.href || entry.action))
-  ) {
-    errors.push('/search.json: an entry without a title, href or action')
-  }
-} catch (error) {
-  errors.push(`/search.json: ${error.code === 'ENOENT' ? 'missing' : 'does not parse'}`)
-}
 
 // Both home pages, English and Latvian, fit the budget.
 const homeSummaries = ['index.html', 'lv.html'].map((file) => {

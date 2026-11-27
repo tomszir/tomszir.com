@@ -15,7 +15,7 @@ const { name } = product.data
 const { description, role, status } = productText(product, lang)
 ---
 
-<a class="panel product" href={`/building/${product.id}`}>
+<a class="panel product" href={`/building/${product.id}`} style={`--mark:url(/building/${product.id}/mark.svg)`}>
   {label && <span class="meta muted">{label}</span>}
   <Icon name="arrow-up-right" size={16} class="panel-arrow" />
   <span class="body">

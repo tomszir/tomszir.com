@@ -1,0 +1,51 @@
+---
+product: pigeon
+---
+
+import Diagram from '../../components/write-up/Diagram.astro'
+
+## What it does
+
+It's 2003, peer-to-peer won and the cloud never happened. Pigeon is the messenger from that world: your browser talks straight to your friends' browsers, with no account and no server keeping your chats.
+
+- **Add friends** with an invite link that waits up to 30 days, or a quick code for someone next to you. Pigeon checks it's really them by their fingerprint.
+- **Messages that wait:** write to a friend who's offline and it's left, sealed, until they're back.
+- **All your devices:** link your phone to your laptop and it's you on both. A recovery key brings your Pigeon back if you lose them.
+- **A whole desktop:** windows, a taskbar and a CRT monitor; on a phone, the Kestrel Pocket, a 2003 handheld.
+
+## How a message travels
+
+<Diagram
+  caption="How a message gets to a friend."
+  width={72}
+  height={15}
+  nodes={[
+    { id: 'relays', label: 'Public relays', sub: 'Nostr', x: 26, y: 0, w: 20 },
+    { id: 'you', label: 'You', sub: 'a browser', kind: 'actor', x: 2, y: 6, w: 14 },
+    { id: 'friend', label: 'Your friend', sub: 'a browser', kind: 'actor', x: 56, y: 6, w: 14 },
+    { id: 'lighthouse', label: 'Lighthouse', sub: 'holds sealed mail', x: 26, y: 12, w: 20 },
+  ]}
+  edges={[
+    { step: 1, path: [[8, 5], [8, 1], [25, 1]], label: 'signed note', at: [10, 0] },
+    { step: 1, path: [[62, 5], [62, 1], [46, 1]], label: 'signed note', at: [48, 0] },
+    { step: 2, path: [[16, 7], [55, 7]], both: true, label: 'direct, encrypted', at: [26, 6] },
+    { step: 3, path: [[8, 9], [8, 13], [25, 13]], dashed: true, label: 'sealed letter', at: [10, 11] },
+    { step: 4, path: [[46, 13], [62, 13], [62, 9]], dashed: true, label: 'picked up', at: [47, 11] },
+  ]}
+  steps={[
+    { title: 'Find each other', text: 'Both post small signed notes on public Nostr relays. The relays only see that two strangers want to meet.', nodes: ['you', 'relays', 'friend'] },
+    { title: 'Talk directly', text: 'WebRTC, browser to browser. Every message is signed and encrypted, and each chat is a signed log the two browsers merge when they meet.', nodes: ['you', 'friend'] },
+    { title: 'Friend away?', text: 'The message is left at a Lighthouse, sealed to your friend’s devices. A Lighthouse is a peer anyone can run.', nodes: ['you', 'lighthouse'] },
+    { title: 'They’re back', text: 'Their Pigeon picks it up. The Lighthouse can’t open it or say whom it’s from.', nodes: ['lighthouse', 'friend'] },
+  ]}
+/>
+
+Each browser makes its own identity, a key pair that never leaves it. The protocol is written down in [docs/protocol.md](https://github.com/tomszir/pigeon/blob/main/docs/protocol.md).
+
+## Privacy
+
+Pigeon keeps nothing on a server: the site is static files, chats and keys stay in your browser, and there are no analytics. When two devices can't reach each other directly, a relay passes the encrypted packets along without being able to read them. A Lighthouse stores only sealed mail it can't open, for 30 days at most. What each part can and can't see is in the [threat model](https://github.com/tomszir/pigeon/blob/main/docs/threat-model.md).
+
+## Not there yet
+
+Pigeon is in early development: chatting with friends, on all your devices, works today, even when they're offline. Files, groups and pages hosted by friends come later. Its protocol hasn't been independently audited, so don't use it where your safety depends on it.

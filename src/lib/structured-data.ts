@@ -1,6 +1,7 @@
 import { type Lang, t } from '../i18n'
 import { site } from '../site'
 import type { Post } from './posts'
+import type { Product } from './products'
 
 const CONTEXT = 'https://schema.org'
 
@@ -47,5 +48,25 @@ export function postData(post: Post) {
     url,
     mainEntityOfPage: url,
     image: `${site.url}/og/writing/${post.id}.png`,
+  }
+}
+
+/** A product someone can install, described as the application it is. */
+export function productData(product: Product) {
+  const url = `${site.url}/building/${product.id}`
+  const { name, description, install, release } = product.data
+  return {
+    '@context': CONTEXT,
+    '@type': 'SoftwareApplication',
+    name,
+    description,
+    applicationCategory: 'BrowserApplication',
+    operatingSystem: 'Chrome, Firefox',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+    author: person,
+    url,
+    ...(install[0] && { installUrl: install[0].url }),
+    ...(release && { softwareVersion: release.version }),
+    image: `${site.url}/og/building/${product.id}.png`,
   }
 }

@@ -5,7 +5,7 @@ published: 2026-10-30
 ---
 
 import Decision from '../../components/write-up/Decision.astro'
-import Flow from '../../components/write-up/Flow.astro'
+import Diagram from '../../components/write-up/Diagram.astro'
 
 I wanted a personal site that shows I understand what I'm doing, not another generic portfolio. This is it: eight pages of HTML, one stylesheet and one script file. Nothing runs on a server when you load it. I wanted most of the work to happen at build time, and I wanted the build to check its own output before anything is deployed.
 
@@ -66,14 +66,29 @@ The home page's HTML is 6.9 KB compressed, so it arrives in that first window. T
 
 The home page currently weighs 11.7 KB. Two scripts measure it again after every build:
 
-<Flow
+<Diagram
   caption="What runs on every build, and on every push."
-  links={['dist/', '', 'only if every check passes']}
+  width={74}
+  height={11}
+  nodes={[
+    { id: 'build', label: 'astro build', x: 0, y: 2, w: 13 },
+    { id: 'stamp', label: 'stamp-build', x: 19, y: 2, w: 13 },
+    { id: 'check', label: 'check-dist', x: 38, y: 2, w: 13 },
+    { id: 'deploy', label: 'Cloudflare', sub: 'static assets', x: 58, y: 2, w: 16 },
+    { id: 'fail', label: 'Build fails', sub: 'nothing ships', x: 38, y: 8, w: 13 },
+  ]}
+  edges={[
+    { step: 2, path: [[13, 3], [18, 3]], label: 'dist/', at: [13, 1] },
+    { step: 3, path: [[32, 3], [37, 3]] },
+    { step: 4, path: [[51, 3], [57, 3]], label: 'all pass', at: [51, 1] },
+    { step: 5, path: [[44, 5], [44, 7]], dashed: true, label: 'a rule breaks', at: [46, 6] },
+  ]}
   steps={[
-    { title: 'astro build', note: 'Renders the pages, bundles the styles and downloads the fonts into dist/.' },
-    { title: 'stamp-build', note: 'Measures each page compressed and writes the size, date and commit in.', focus: true },
-    { title: 'check-dist', note: 'Fails the build if a page breaks a rule or the home page passes 14 KB.' },
-    { title: 'Cloudflare deploy', note: 'Uploads dist/ as static assets on every push to main. No Worker script.' },
+    { title: 'astro build', text: 'Renders the pages, bundles the styles and downloads the fonts into dist/.', nodes: ['build'] },
+    { title: 'stamp-build', text: 'Measures each page compressed and writes the size, date and commit in.', nodes: ['build', 'stamp'] },
+    { title: 'check-dist', text: 'Checks every page against the rules: titles, a Content-Security-Policy, share cards, the 14 KB home page.', nodes: ['stamp', 'check'] },
+    { title: 'Cloudflare deploy', text: 'Uploads dist/ as static assets on every push to main. No Worker script.', nodes: ['check', 'deploy'] },
+    { title: 'Or it stops', text: 'If any page breaks a rule, the build fails there and nothing is deployed.', nodes: ['check', 'fail'] },
   ]}
 />
 

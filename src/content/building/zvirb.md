@@ -5,7 +5,8 @@ with: Independent
 role: Author
 status: In development
 stack: Go, Rust, WebAssembly, React
-order: 2
+icon: ../../assets/products/zvirb.svg
+order: 4
 lv:
   description: 'Spēļu serveri uz jūsu pašu datoriem. Go API un dēmons, izolēti WebAssembly spraudņi un React klients.'
   with: Neatkarīgs

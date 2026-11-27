@@ -1,5 +1,6 @@
 import { type CollectionEntry, getCollection } from 'astro:content'
 import type { Lang } from '../i18n'
+import { loadDemo } from './demo'
 
 export type Product = CollectionEntry<'building'>
 
@@ -33,4 +34,10 @@ export function productFacts(product: Product) {
     { label: 'Role', value: data.role },
     ...(data.stack ? [{ label: 'Stack', value: data.stack }] : []),
   ]
+}
+
+/** The product's web demo for its pinned release, when it has one (src/lib/demo.ts). */
+export async function productDemo({ data }: Product) {
+  if (!data.tryIt || !data.release) return undefined
+  return loadDemo(data.tryIt.asset, data.release, data.tryIt.checkout)
 }

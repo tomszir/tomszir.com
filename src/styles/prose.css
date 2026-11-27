@@ -70,6 +70,39 @@
   font-size: 0.85em;
 }
 
+/* A keycap, simplified from a real one: a face sitting in a body whose thin sides and deeper lower
+   skirt show around it. Uneven border widths meet at angled corners, which reads as the bevel;
+   the skirt is lighter than the face, as if catching the light. Light and dark each get their
+   own tones. */
+.prose kbd {
+  --key-face: light-dark(var(--bg), color-mix(in srgb, var(--fg) 12%, var(--panel)));
+  --key-side: light-dark(
+    color-mix(in srgb, var(--fg) 16%, var(--panel)),
+    color-mix(in srgb, var(--fg) 6%, var(--panel))
+  );
+  --key-skirt: light-dark(
+    color-mix(in srgb, var(--fg) 26%, var(--panel)),
+    color-mix(in srgb, var(--fg) 20%, var(--panel))
+  );
+  display: inline-block;
+  padding: 0.06em 0.5em 0.1em;
+  border: 2px solid var(--key-side);
+  border-top-width: 1px;
+  border-bottom: 4px solid var(--key-skirt);
+  border-radius: 7px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--fg) 5%, var(--key-face)),
+    var(--key-face)
+  );
+  color: color-mix(in srgb, var(--fg) 88%, var(--key-face));
+  font-family: var(--font-sans);
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
 .prose pre {
   overflow-x: auto;
   padding: 20px 22px;
@@ -92,24 +125,28 @@
   font-weight: var(--shiki-dark-font-weight);
 }
 
-/* Tables: a panel, labels in muted mono, values in mono since they're data. It scrolls inside
-   itself rather than widening the page. */
+/* Tables, on Butterick's and Ström's advice: no grid, rows parted by space and only an extremely
+   light rule, text left and headers over their own column, never centred. A table of two columns is
+   a name and its value (GOV.UK's summary list): the name column is only as wide as its longest
+   name, so each value sits beside it, and on a phone each row stacks, name over value, so the page
+   never scrolls sideways. Wider tables are words: the first column takes about a quarter and every
+   column wraps. */
 .prose table {
-  display: block;
-  overflow-x: auto;
-  width: max-content;
-  max-width: 100%;
-  padding: 8px 12px;
-  border-collapse: collapse;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  padding: 4px;
   border-radius: var(--radius-panel);
   background: var(--panel);
-  font-size: 16px;
+  font-size: 15.5px;
   line-height: 1.5;
 }
 
 .prose th {
-  padding: 8px 12px;
+  padding: 10px 16px 9px;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
   text-align: left;
+  vertical-align: bottom;
   font-family: var(--font-mono);
   font-size: var(--step-meta);
   font-weight: 400;
@@ -117,17 +154,465 @@
 }
 
 .prose td {
-  padding: 6px 12px;
-  vertical-align: baseline;
+  padding: 12px 16px;
+  vertical-align: top;
 }
 
-.prose td + td {
+.prose tbody tr + tr td {
+  border-top: 1px solid color-mix(in srgb, var(--fg) 5%, transparent);
+}
+
+.prose td:first-child {
+  font-weight: 500;
+}
+
+.prose :is(th, td):first-child:not(:nth-last-child(2)) {
+  width: 26%;
+}
+
+.prose :is(th, td):first-child:nth-last-child(2) {
+  width: 1%;
+  padding-right: 32px;
+  white-space: nowrap;
+}
+
+.prose td:nth-child(2):last-child {
   font-family: var(--font-mono);
   font-size: 14px;
-  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .prose table:has(th:first-child:nth-last-child(2)) :is(thead, tbody, tr, td) {
+    display: block;
+    width: auto;
+  }
+
+  .prose table:has(th:first-child:nth-last-child(2)) thead {
+    display: none;
+  }
+
+  .prose table:has(th:first-child:nth-last-child(2)) td {
+    padding: 0 12px;
+    border: 0;
+    white-space: normal;
+  }
+
+  .prose table:has(th:first-child:nth-last-child(2)) tr {
+    padding: 10px 0;
+  }
+
+  .prose table:has(th:first-child:nth-last-child(2)) tr + tr {
+    border-top: 1px solid color-mix(in srgb, var(--fg) 5%, transparent);
+  }
+
+  .prose table:has(th:first-child:nth-last-child(2)) td:first-child {
+    color: var(--muted);
+    font-size: 14px;
+  }
 }
 
 .prose img {
   height: auto;
   border-radius: var(--radius-panel);
+}
+
+/* Pixel art, scaled with square pixels rather than smoothed. */
+.prose img.pixels {
+  border-radius: 0;
+  image-rendering: pixelated;
+}
+
+/* Aloft's theme files (write-up/AloftThemes.astro). */
+.prose .themes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.prose .themes li {
+  margin: 0;
+}
+
+.prose .theme {
+  gap: 16px;
+  text-decoration: none;
+  color: var(--fg);
+}
+
+.prose .theme {
+  position: relative;
+}
+
+/* The download icon, where a panel's arrow sits, shown on hover and focus. */
+.prose .theme::after {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  color: var(--muted);
+  opacity: 0;
+  mask-image: url('../icons/download.svg');
+  transform: translateY(-3px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.35s var(--ease);
+}
+
+.prose .theme:hover::after,
+.prose .theme:focus-visible::after {
+  opacity: 1;
+  transform: none;
+}
+
+.prose .swatches {
+  display: flex;
+  gap: 6px;
+}
+
+.prose .swatches i {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  /* A ring in the text colour (light on dark, dark on light), so a swatch the panel's own colour
+     still shows its edge. */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 22%, transparent);
+}
+
+.prose .theme .name {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+/* A diagram (write-up/Diagram.astro): parties and right-angled arrows on a grid, in a panel.
+   Interactive (diagram-live, from src/scripts/diagram.ts), the panel is a canvas: zoom controls
+   float in its corner and show on hover or focus (always on touch screens), and a bar along its
+   foot says the current step, with arrows and a marker per step. Otherwise every step shows,
+   numbered, and the list under the panel says them. */
+.prose .diagram {
+  display: grid;
+  /* A column that can't grow past the text's: a wide drawing fits or scrolls inside it instead. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin-block: 2.2em;
+}
+
+.prose .diagram-panel {
+  --diagram-ground: var(--panel);
+  overflow: hidden;
+  border-radius: var(--radius-panel);
+  background: var(--diagram-ground);
+}
+
+.prose .diagram-board {
+  position: relative;
+  overflow-x: auto;
+  padding: 36px 24px;
+}
+
+.prose .diagram-canvas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* A block at the drawing's edge draws half its outline past it; the board's padding has room. */
+  overflow: visible;
+}
+
+.prose :is(.diagram-tools, .diagram-nav) svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+/* Graph paper: dots in a fixed grid across the whole panel, still while the drawing zooms and moves
+   over them. */
+.prose .diagram-paper .diagram-board {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--line) 30%, transparent) 0.75px,
+    transparent 1.1px
+  );
+  background-size: 18px 18px;
+  background-position: center;
+}
+
+.prose .diagram-group rect {
+  fill: none;
+  stroke: var(--line);
+  stroke-dasharray: 4 4;
+}
+
+.prose .diagram-group text {
+  fill: var(--muted);
+  font: 10.5px var(--font-mono);
+}
+
+.prose .diagram-node rect {
+  fill: var(--raised);
+}
+
+.prose .diagram-node text {
+  fill: var(--fg);
+  font: 500 12px var(--font-sans);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.prose .diagram-node .sub {
+  fill: var(--muted);
+  font: 10px var(--font-mono);
+}
+
+.prose .diagram-edge path {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.prose .diagram-edge.dashed path {
+  stroke-dasharray: 5 4;
+}
+
+.prose .diagram-edge text {
+  fill: var(--muted);
+  font: 11px var(--font-mono);
+  dominant-baseline: central;
+}
+
+.prose .diagram-token {
+  fill: var(--accent);
+}
+
+.prose .diagram-canvas {
+  width: max-content;
+  margin-inline: auto;
+  transform-origin: 0 0;
+}
+
+/* The SVG fills the panel by itself; only the text drawing has a width of its own. */
+.prose .diagram-paper .diagram-canvas {
+  width: 100%;
+}
+
+.prose .diagram-chars {
+  position: relative;
+  width: max-content;
+  color: var(--muted);
+  font: 12.5px / 20px var(--font-mono);
+  white-space: pre;
+}
+
+.prose .diagram-chars [data-node] {
+  color: var(--fg);
+}
+
+.prose .diagram-steps {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.prose .diagram-steps b,
+.prose .diagram-now b {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.prose .diagram figcaption {
+  margin: 0;
+}
+
+/* Interactive: a canvas. One finger still scrolls the page until the drawing is zoomed. */
+.prose .diagram-live .diagram-steps {
+  display: none;
+}
+
+.prose .diagram-live .diagram-board {
+  overflow: hidden;
+  touch-action: pan-y;
+  outline: none;
+  /* A drag pans the canvas; it never selects the drawing's text. */
+  user-select: none;
+}
+
+.prose .diagram-live .diagram-board:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.prose .diagram-live .diagram-board[data-zoomed] {
+  touch-action: none;
+  cursor: grab;
+}
+
+.prose .diagram-live .diagram-board[data-zoomed]:active {
+  cursor: grabbing;
+}
+
+.prose .diagram-live :is([data-node], [data-step]) {
+  cursor: pointer;
+  transition:
+    opacity 0.25s ease,
+    color 0.25s ease;
+}
+
+.prose .diagram-live [data-step]:not([data-on]) {
+  opacity: 0.5;
+}
+
+/* A faded party keeps its block solid, so the paper doesn't show through it; only its words fade. */
+.prose .diagram-live .diagram-chars [data-node]:not([data-on]),
+.prose .diagram-live .diagram-node:not([data-on]) text {
+  opacity: 0.7;
+}
+
+.prose .diagram-live .diagram-edge[data-on] path {
+  stroke: var(--accent);
+}
+
+.prose .diagram-live .diagram-edge[data-on] text {
+  fill: var(--fg);
+}
+
+.prose .diagram-live .diagram-chars :is([data-step], [data-node])[data-on] {
+  color: var(--accent);
+}
+
+.prose .diagram-live .diagram-node[data-on] rect {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+/* The text drawing's moving star covers the character under it, on the board's own ground. */
+.prose .diagram-star {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--diagram-ground, var(--panel));
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Zoom controls: a small cluster in the canvas's corner, as map and canvas tools keep them. */
+.prose .diagram-tools {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--raised);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.prose .diagram-board:is(:hover, :focus-within) .diagram-tools {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .prose .diagram-tools {
+    opacity: 1;
+  }
+}
+
+.prose .diagram-tools button,
+.prose .diagram-nav button:not([data-go]) {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.prose .diagram-tools button:hover,
+.prose .diagram-nav button:not([data-go]):hover {
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  color: var(--fg);
+}
+
+/* The step bar: what's happening, then where you are in it. The controls keep their place
+   whatever the step's words: top right on a wide screen, a row of their own above the words on a
+   phone. The words keep the height of the longest step's (set by the script). */
+.prose .diagram-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px 24px;
+  padding: 16px 16px 16px 24px;
+  background: color-mix(in srgb, var(--raised) 55%, var(--panel));
+}
+
+.prose .diagram-now {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+
+.prose .diagram-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.prose .diagram-dots {
+  display: flex;
+}
+
+/* Each marker is a 24px target round an 8px square. */
+.prose .diagram-dots button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(var(--line), var(--line)) center / 8px 8px no-repeat;
+  cursor: pointer;
+}
+
+.prose .diagram-dots button[aria-current] {
+  background-image: linear-gradient(var(--accent), var(--accent));
+}
+
+@media (max-width: 640px) {
+  .prose .diagram-board {
+    padding: 24px 16px;
+  }
+
+  .prose .diagram-bar {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 12px 12px 14px 16px;
+  }
+
+  .prose .diagram-nav {
+    order: -1;
+    justify-content: space-between;
+    margin-left: -4px;
+  }
+
+  .prose .diagram-chars {
+    font-size: 11px;
+    line-height: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prose .diagram-live :is([data-step], [data-node]),
+  .prose .diagram-tools,
+  .prose .diagram-tools button,
+  .prose .diagram-nav button {
+    transition: none;
+  }
 }

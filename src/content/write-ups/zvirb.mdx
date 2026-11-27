@@ -4,7 +4,7 @@ product: zvirb
 
 
 import Decision from '../../components/write-up/Decision.astro'
-import Flow from '../../components/write-up/Flow.astro'
+import Diagram from '../../components/write-up/Diagram.astro'
 
 ## Why
 
@@ -14,13 +14,32 @@ Running a game server for friends should be a weekend's setup, not a second job.
 
 There are two Go binaries. The API serves the web client and owns accounts, nodes, instances and plugins. A daemon runs on every machine that hosts game servers: it runs the containers, the files, the console and the metrics, and it never runs a plugin.
 
-<Flow
+<Diagram
   caption="The two binaries, and where plugins run."
-  links={['HTTP, WebSocket', 'Connect over HTTP/2']}
+  width={80}
+  height={14}
+  groups={[
+    { label: 'API process', x: 20, y: 1, w: 24, h: 12 },
+    { label: 'each node', x: 56, y: 1, w: 24, h: 12 },
+  ]}
+  nodes={[
+    { id: 'client', label: 'Web client', sub: 'React', kind: 'actor', x: 0, y: 3, w: 14 },
+    { id: 'api', label: 'API', sub: 'Go', x: 23, y: 3, w: 18 },
+    { id: 'plugins', label: 'Plugins', sub: 'WebAssembly', x: 23, y: 8, w: 18 },
+    { id: 'daemon', label: 'Daemon', sub: 'Go', x: 59, y: 3, w: 18 },
+    { id: 'servers', label: 'Game servers', sub: 'containers', x: 59, y: 8, w: 18 },
+  ]}
+  edges={[
+    { step: 1, path: [[14, 4], [22, 4]], label: 'HTTP, WebSocket', at: [0, 7] },
+    { step: 2, path: [[41, 4], [58, 4]], label: 'Connect', at: [45, 6] },
+    { step: 3, path: [[32, 6], [32, 7]], label: 'sandboxed', at: [21, 7] },
+    { step: 4, path: [[68, 6], [68, 7]], label: 'runs', at: [70, 7] },
+  ]}
   steps={[
-    { title: 'Web client', note: 'React, with React Aria components. Its API types are generated from the OpenAPI schema.' },
-    { title: 'API', note: 'Go. Accounts, nodes, instances, and the plugin host.', focus: true },
-    { title: 'Daemon', note: 'Go, one per node. Containers, files, the console and metrics. Never runs plugins.' },
+    { title: 'Web client', text: 'React, with React Aria components. Its API types are generated from the OpenAPI schema, and it only ever talks to the API.', nodes: ['client', 'api'] },
+    { title: 'API to daemon', text: 'The API calls the daemon over Connect, never the other way round. Browsers never reach a daemon at all.', nodes: ['api', 'daemon'] },
+    { title: 'Plugins', text: 'Support for each game is a WebAssembly plugin, run inside the API in a sandbox. It can only do what the host grants it.', nodes: ['api', 'plugins'] },
+    { title: 'Each node', text: 'A daemon on every machine runs the game servers as containers, with their files, console and metrics. It never runs a plugin.', nodes: ['daemon', 'servers'] },
   ]}
 />
 

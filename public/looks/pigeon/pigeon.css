@@ -1,0 +1,287 @@
+/* The Pigeon post in Pigeon's own type, inside a Windows XP window: Wine's Tahoma clone (LGPL 2.1,
+   cut to the site's characters), Bitstream Vera Sans Mono (unmodified, as its licence asks), XP's
+   title bar and frame round the post's text, square corners throughout, XP's buttons (XP.css's
+   values, as Pigeon uses them), a list view for tables and sunken fields for pictures and
+   diagrams. Classic Luna in the light theme, a night version of it in the dark. Scoped to the
+   post's text; the page around it stays the site's. Loaded by that post alone, before the site's
+   own prose styles, so every rule here starts at :root to outrank them. Licences in LICENSES/. */
+@font-face {
+  font-family: 'Pigeon Tahoma';
+  src: url('wine-tahoma.woff2') format('woff2');
+  /* One regular face: bold is synthesised from it, as in Pigeon itself. */
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pigeon Mono';
+  src: url('vera-sans-mono.ttf') format('truetype');
+  font-display: swap;
+}
+
+:root {
+  --xp-title: linear-gradient(
+    #0997ff,
+    #0053ee 8%,
+    #0050ee 40%,
+    #0066ff 88%,
+    #005bff 95%,
+    #003dd7 96%
+  );
+  --xp-frame: #0055ea;
+  --xp-body: #ece9d8;
+  --xp-sunken: #ffffff;
+  --xp-sunken-edge: #7f9db9;
+  --xp-text: #000000;
+  --xp-select: #316ac5;
+  --xp-accent: #2a5fd0;
+  --xp-link: #0033cc;
+  --xp-button: linear-gradient(#ffffff 0%, #ecebe5 86%, #d8d0c4 100%);
+  --xp-button-pressed: linear-gradient(#cdcac3 0%, #e3e3db 8%, #e5e5de 94%, #f2f2f1 100%);
+  --xp-button-edge: #003c74;
+  --xp-button-hover:
+    inset -1px 1px #fff0cf, inset 1px 2px #fdd889, inset -2px 2px #fbc761, inset 2px -2px #e5a01a;
+  --xp-button-focus:
+    inset -1px 1px #cee7ff, inset 1px 2px #98b8ea, inset -2px 2px #bcd4f6, inset 1px -1px #89ade4,
+    inset 2px -2px #89ade4;
+  --xp-header: linear-gradient(#ffffff, #f4f3ee 60%, #ebeadb);
+  --xp-header-edge: #d6d2c2;
+  --xp-status: linear-gradient(#f4f2e9, #ece9d8);
+  --xp-buttons: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='71' height='21' viewBox='0 0 71 21'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%233c8cff'/%3E%3Cstop offset='1' stop-color='%230b4fd8'/%3E%3C/linearGradient%3E%3ClinearGradient id='r' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23e8704a'/%3E%3Cstop offset='1' stop-color='%23c33f13'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg stroke='%23fff'%3E%3Crect x='.5' y='.5' width='20' height='20' rx='3' fill='url%28%23b%29'/%3E%3Crect x='25.5' y='.5' width='20' height='20' rx='3' fill='url%28%23b%29'/%3E%3Crect x='50.5' y='.5' width='20' height='20' rx='3' fill='url%28%23r%29'/%3E%3C/g%3E%3Cg fill='%23fff'%3E%3Crect x='5' y='13' width='7' height='3'/%3E%3Cpath d='M30 5h11v11H30zM32 8v6h7V8z' fill-rule='evenodd'/%3E%3C/g%3E%3Cpath d='M55 5l11 11M66 5 55 16' stroke='%23fff' stroke-width='2.4'/%3E%3C/svg%3E");
+}
+
+:root[data-theme='dark'] {
+  --xp-title: linear-gradient(
+    #3b5786,
+    #1d3260 8%,
+    #1a2d57 40%,
+    #22396a 88%,
+    #1d3260 95%,
+    #101e3e 96%
+  );
+  --xp-frame: #1b2d55;
+  --xp-body: #161614;
+  --xp-sunken: #0b0b0a;
+  --xp-sunken-edge: #33476b;
+  --xp-text: #e9e8e3;
+  --xp-select: #3d68b8;
+  --xp-accent: #6f9cf5;
+  --xp-link: #8ab4ff;
+  --xp-button: linear-gradient(#3d3c39 0%, #2b2a27 86%, #201f1d 100%);
+  --xp-button-pressed: linear-gradient(#1c1b19 0%, #262523 8%, #2a2927 94%, #33322f 100%);
+  --xp-button-edge: #4f6ea8;
+  --xp-button-hover:
+    inset -1px 1px #6b5524, inset 1px 2px #8c6a26, inset -2px 2px #a97b22, inset 2px -2px #c48a1c;
+  --xp-button-focus:
+    inset -1px 1px #2b4778, inset 1px 2px #35548c, inset -2px 2px #2f4c80, inset 1px -1px #3a5c99,
+    inset 2px -2px #3a5c99;
+  --xp-header: linear-gradient(#2e2d2a, #262523 60%, #1f1e1c);
+  --xp-header-edge: #3a3a37;
+  --xp-status: linear-gradient(#1f1e1c, #191917);
+  --xp-buttons: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='71' height='21' viewBox='0 0 71 21'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%233a5684'/%3E%3Cstop offset='1' stop-color='%231c2e52'/%3E%3C/linearGradient%3E%3ClinearGradient id='r' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23a8553a'/%3E%3Cstop offset='1' stop-color='%236e2a16'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg stroke='%23b8c4dc'%3E%3Crect x='.5' y='.5' width='20' height='20' rx='3' fill='url%28%23b%29'/%3E%3Crect x='25.5' y='.5' width='20' height='20' rx='3' fill='url%28%23b%29'/%3E%3Crect x='50.5' y='.5' width='20' height='20' rx='3' fill='url%28%23r%29'/%3E%3C/g%3E%3Cg fill='%23fff'%3E%3Crect x='5' y='13' width='7' height='3'/%3E%3Cpath d='M30 5h11v11H30zM32 8v6h7V8z' fill-rule='evenodd'/%3E%3C/g%3E%3Cpath d='M55 5l11 11M66 5 55 16' stroke='%23fff' stroke-width='2.4'/%3E%3C/svg%3E");
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --xp-title: linear-gradient(
+      #3b5786,
+      #1d3260 8%,
+      #1a2d57 40%,
+      #22396a 88%,
+      #1d3260 95%,
+      #101e3e 96%
+    );
+    --xp-frame: #1b2d55;
+    --xp-body: #161614;
+    --xp-sunken: #0b0b0a;
+    --xp-sunken-edge: #33476b;
+    --xp-text: #e9e8e3;
+    --xp-select: #3d68b8;
+    --xp-accent: #6f9cf5;
+    --xp-link: #8ab4ff;
+    --xp-button: linear-gradient(#3d3c39 0%, #2b2a27 86%, #201f1d 100%);
+    --xp-button-pressed: linear-gradient(#1c1b19 0%, #262523 8%, #2a2927 94%, #33322f 100%);
+    --xp-button-edge: #4f6ea8;
+    --xp-button-hover:
+      inset -1px 1px #6b5524, inset 1px 2px #8c6a26, inset -2px 2px #a97b22, inset 2px -2px #c48a1c;
+    --xp-button-focus:
+      inset -1px 1px #2b4778, inset 1px 2px #35548c, inset -2px 2px #2f4c80, inset 1px -1px #3a5c99,
+      inset 2px -2px #3a5c99;
+    --xp-header: linear-gradient(#2e2d2a, #262523 60%, #1f1e1c);
+    --xp-header-edge: #3a3a37;
+    --xp-status: linear-gradient(#1f1e1c, #191917);
+    --xp-buttons: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='71' height='21' viewBox='0 0 71 21'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%233a5684'/%3E%3Cstop offset='1' stop-color='%231c2e52'/%3E%3C/linearGradient%3E%3ClinearGradient id='r' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23a8553a'/%3E%3Cstop offset='1' stop-color='%236e2a16'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg stroke='%23b8c4dc'%3E%3Crect x='.5' y='.5' width='20' height='20' rx='3' fill='url%28%23b%29'/%3E%3Crect x='25.5' y='.5' width='20' height='20' rx='3' fill='url%28%23b%29'/%3E%3Crect x='50.5' y='.5' width='20' height='20' rx='3' fill='url%28%23r%29'/%3E%3C/g%3E%3Cg fill='%23fff'%3E%3Crect x='5' y='13' width='7' height='3'/%3E%3Cpath d='M30 5h11v11H30zM32 8v6h7V8z' fill-rule='evenodd'/%3E%3C/g%3E%3Cpath d='M55 5l11 11M66 5 55 16' stroke='%23fff' stroke-width='2.4'/%3E%3C/svg%3E");
+  }
+}
+
+/* The window. The site's measure is 66ch of Inter Tight, about 38em; in ch of Tahoma it would be
+   narrower, so it's set in em here, with the window's padding and frame added on, and the text is
+   as wide as any other post's. */
+:root .prose {
+  --font-mono: 'Pigeon Mono', ui-monospace, monospace;
+  /* XP's blue takes the site's orange: lit arrows and parties, the moving marker, links. */
+  --accent: var(--xp-accent);
+  position: relative;
+  max-width: calc(38.2em + 70px);
+  padding: 62px 32px 36px;
+  border: 3px solid var(--xp-frame);
+  border-top: 0;
+  background: var(--xp-body);
+  font-family: 'Pigeon Tahoma', Tahoma, Verdana, sans-serif;
+  /* Crisp, unsmoothed glyphs where the browser allows it (macOS), the way XP drew Tahoma. */
+  -webkit-font-smoothing: none;
+}
+
+/* The title bar, and its minimise, maximise and close buttons. */
+:root .prose::before {
+  content: 'Pigeon - Read Me';
+  position: absolute;
+  inset: 0 -3px auto;
+  height: 30px;
+  padding: 0 88px 0 12px;
+  background:
+    var(--xp-buttons) no-repeat right 6px center,
+    var(--xp-title);
+  color: #fff;
+  font:
+    700 13px / 30px 'Pigeon Tahoma',
+    Tahoma,
+    sans-serif;
+  text-shadow: 1px 1px 0 rgb(0 0 0 / 0.45);
+}
+
+:root .prose :is(h2, h3) {
+  letter-spacing: 0;
+}
+
+:root .prose li::marker {
+  content: '\25A0\00A0\00A0';
+  font-size: 0.7em;
+  color: var(--muted);
+}
+
+/* Sunken fields: pictures and diagrams. */
+:root .prose :is(img, .diagram-panel) {
+  --diagram-ground: var(--xp-sunken);
+  border: 1px solid var(--xp-sunken-edge);
+  border-radius: 0;
+  background: var(--xp-sunken);
+}
+
+:root .prose img.pixels {
+  padding: 4px;
+}
+
+/* Tables are list views: a white field, column headers with XP's gradient and dividers. */
+:root .prose table {
+  padding: 0;
+  border: 1px solid var(--xp-sunken-edge);
+  border-radius: 0;
+  background: var(--xp-sunken);
+  font-size: 16px;
+}
+
+:root .prose th {
+  padding: 6px 14px 5px;
+  border-right: 1px solid var(--xp-header-edge);
+  border-bottom: 1px solid var(--xp-header-edge);
+  background: var(--xp-header);
+  color: var(--xp-text);
+  font:
+    400 13px 'Pigeon Tahoma',
+    Tahoma,
+    sans-serif;
+}
+
+:root .prose th:last-child {
+  border-right: 0;
+}
+
+:root .prose td {
+  padding: 9px 14px;
+}
+
+/* The site's own faint rule between rows, in the list view's text colour. */
+:root .prose tbody tr + tr td {
+  border-top: 1px solid color-mix(in srgb, var(--xp-text) 7%, transparent);
+}
+
+/* XP's buttons, square: the diagram's zoom tools sit on a toolbar, its steps in a status bar. */
+:root .prose :is(.diagram-tools button, .diagram-nav button:not([data-go])) {
+  width: 30px;
+  height: 26px;
+  border: 1px solid var(--xp-button-edge);
+  border-radius: 0;
+  background: var(--xp-button);
+  color: var(--xp-text);
+}
+
+:root .prose :is(.diagram-tools button, .diagram-nav button:not([data-go])):hover {
+  background: var(--xp-button);
+  box-shadow: var(--xp-button-hover);
+  color: var(--xp-text);
+}
+
+:root .prose :is(.diagram-tools button, .diagram-nav button:not([data-go])):active {
+  background: var(--xp-button-pressed);
+  box-shadow: none;
+}
+
+:root .prose :is(.diagram-tools button, .diagram-nav button:not([data-go])):focus-visible {
+  outline: 1px dotted var(--xp-text);
+  outline-offset: -4px;
+  box-shadow: var(--xp-button-focus);
+}
+
+:root .prose .diagram-tools {
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--xp-sunken-edge);
+  border-radius: 0;
+  background: var(--xp-body);
+}
+
+:root .prose .diagram-nav {
+  gap: 4px;
+}
+
+:root .prose .diagram-bar {
+  border-top: 1px solid var(--xp-sunken-edge);
+  background: var(--xp-status);
+}
+
+:root .prose .diagram-dots button {
+  background-image: linear-gradient(var(--xp-sunken-edge), var(--xp-sunken-edge));
+}
+
+:root .prose .diagram-dots button[aria-current] {
+  background-image: linear-gradient(var(--xp-select), var(--xp-select));
+}
+
+:root .prose .diagram-live .diagram-board:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--xp-select);
+}
+
+@media (max-width: 640px) {
+  :root .prose {
+    max-width: none;
+    padding: 50px 16px 22px;
+  }
+}
+
+/* Links the way 2003 drew them: plain blue, underlined only under the pointer, no icon. */
+:root .prose a {
+  color: var(--xp-link);
+  text-decoration: none;
+}
+
+:root .prose a:hover,
+:root .prose a:focus-visible {
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1px;
+}
+
+:root .prose a::after {
+  content: none;
+}

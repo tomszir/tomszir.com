@@ -1,0 +1,24 @@
+---
+import { getEntry, render } from 'astro:content'
+import Article from '../../../components/Article.astro'
+import Base from '../../../layouts/Base.astro'
+import { aloftPrivacy } from '../../../lib/aloft'
+import { readingMinutes } from '../../../lib/posts'
+
+const policy = await getEntry('policies', 'aloft')
+if (!policy) throw new Error('Aloft privacy policy not loaded')
+const { Content, headings } = await render(policy)
+---
+
+<Base title={aloftPrivacy.title} description={aloftPrivacy.description}>
+  <article class="container">
+    <header class="page-head">
+      <a class="back" href="/building/aloft">Aloft</a>
+      <h1 class="page-title">Privacy policy</h1>
+      <p class="lede">{aloftPrivacy.description}</p>
+    </header>
+    <Article headings={headings} minutes={readingMinutes(policy)}>
+      <Content />
+    </Article>
+  </article>
+</Base>

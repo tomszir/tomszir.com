@@ -9,8 +9,8 @@ export const site = {
   name: 'Toms Zvirbulis',
   url: 'https://tomszir.com',
   description: {
-    en: 'Toms Zvirbulis, software developer in Latvia. Building Team Up and Zvirb, and writing about how software is made.',
-    lv: 'Toms Zvirbulis, programmatūras izstrādātājs Latvijā. Veido Team Up un Zvirb un raksta par to, kā top programmatūra.',
+    en: 'Toms Zvirbulis, software developer in Latvia. Building Team Up and Aloft, and writing about how software is made.',
+    lv: 'Toms Zvirbulis, programmatūras izstrādātājs Latvijā. Veido Team Up un Aloft un raksta par to, kā top programmatūra.',
   } satisfies Text,
   role: { en: 'Software developer', lv: 'Programmatūras izstrādātājs' } satisfies Text,
   email: 'tomszir@proton.me',
@@ -188,11 +188,11 @@ export const site = {
     building: {
       en: {
         title: 'Building',
-        description: 'The products Toms Zvirbulis is building: Team Up and Zvirb.',
+        description: 'The products Toms Zvirbulis is building: Team Up, Aloft, Pigeon and Zvirb.',
       },
       lv: {
         title: 'Projekti',
-        description: 'Produkti, ko veido Toms Zvirbulis: Team Up un Zvirb.',
+        description: 'Produkti, ko veido Toms Zvirbulis: Team Up, Aloft, Pigeon un Zvirb.',
       },
     },
     writing: {

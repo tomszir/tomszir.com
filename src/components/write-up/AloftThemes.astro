@@ -1,0 +1,26 @@
+---
+/**
+ * The site's palette as Aloft theme files, each a download with its colours shown. Styled in
+ * prose.css, download icon included: a style block or an Icon here would split the site's CSS and
+ * add hashes to every page's policy.
+ */
+import { aloftThemes } from '../../lib/aloft'
+---
+
+<ul class="themes">
+  {
+    aloftThemes.map(({ id, theme }) => (
+      <li>
+        <a class="panel theme" href={`/building/aloft/${id}.json`} download={`${id}.json`}>
+          <span class="meta muted">{theme.scheme}</span>
+          <span class="swatches" aria-hidden="true">
+            {Object.values(theme.colors).map((colour) => (
+              <i style={{ background: colour }} />
+            ))}
+          </span>
+          <span class="name">{theme.name}</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>

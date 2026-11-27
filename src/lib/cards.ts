@@ -4,6 +4,7 @@ import { Resvg } from '@resvg/resvg-js'
 import satori from 'satori'
 import { type Lang, langs, t } from '../i18n'
 import { site } from '../site'
+import { aloftPrivacy } from './aloft'
 import { formatDate, getPosts } from './posts'
 import { getProducts } from './products'
 
@@ -17,6 +18,8 @@ export interface Card {
   label: string
   title: string
   description: string
+  /** A ready-made card, from the repository root: served as it is in place of the template. */
+  file?: string | undefined
 }
 
 const CARD_WIDTH = 1200
@@ -57,8 +60,15 @@ export async function getCards(): Promise<Card[]> {
     label: `Building · ${product.data.role}`,
     title: product.data.name,
     description: product.data.description,
+    file: product.data.card,
   }))
-  return [...pages, ...posts, ...products]
+  const privacy = {
+    path: 'building/aloft/privacy',
+    lang: 'en' as const,
+    label: 'Building · Aloft',
+    ...aloftPrivacy,
+  }
+  return [...pages, ...posts, ...products, privacy]
 }
 
 // The build runs from the repository root; bundling moves this module, so paths start there.
@@ -99,6 +109,7 @@ const h = (type: string, style: Record<string, unknown>, ...children: (Node | st
 
 /** The card as a PNG: label at the top, title and description, `tomszir.com` at the foot. */
 export async function renderCard(card: Card): Promise<Uint8Array<ArrayBuffer>> {
+  if (card.file) return new Uint8Array(readFileSync(join(root, card.file)))
   const titleSize = card.title.length > 40 ? 64 : 80
   const mono = {
     fontFamily: 'JetBrains Mono latin, JetBrains Mono latin-ext',

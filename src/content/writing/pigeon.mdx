@@ -1,0 +1,116 @@
+---
+title: Pigeon, a messenger from a 2003 that never happened
+description: Browsers talking straight to each other, 90 billion pixel pigeons, and a Windows XP desktop I grew up on.
+published: 2026-11-27
+look: pigeon
+---
+
+import { Image } from 'astro:assets'
+import Diagram from '../../components/write-up/Diagram.astro'
+import dressed from '../../assets/writing/pigeon/birds-dress.png'
+import flock from '../../assets/writing/pigeon/birds-grid.png'
+
+Pigeon is a messenger with nobody in the middle. Your browser talks straight to your friends' browsers: no account, no server keeping your chats. It lives inside a fake 2003 desktop, and it's live at [pigeon.tomszir.com](https://pigeon.tomszir.com).
+
+## Why peer-to-peer
+
+I wanted to try peer-to-peer for real, not just read about it. [Trystero](https://github.com/dmotz/trystero) made the first step easy, and once two tabs were talking to each other I wanted more: a small decentralised internet you can actually play around with.
+
+So Pigeon pretends peer-to-peer won. It's 2003, there is no cloud, and your friends' computers are the network.
+
+## 90 billion pigeons
+
+Everyone gets a pixel pigeon, drawn from their id. No uploads, no picking: the same id always gives the same bird, on every Pigeon.
+
+<Image class="pixels" src={flock} format="png" alt="A grid of 72 pixel pigeons, each with its own colours, background and hat, scarf or glasses." />
+
+It works a bit like those NFT avatars, minus the money. A hash of your id picks every trait: plumage, neck colour, eyes, beak, then a hat, a scarf, glasses, something in its beak, and a scene behind it. That's about 90 billion birds.
+
+<Image class="pixels" src={dressed} format="png" alt="The same grey pigeon six times, gaining a top hat, a scarf, sunglasses, a letter and finally a wire and a paper plane behind it." />
+
+A bird is only a picture, though. It sits next to your fingerprint and never replaces it, since 90 billion is small enough to fake one if you really tried.
+
+## Making friends
+
+There's no directory and no search. You add someone the old way: you give them something.
+
+<Diagram
+  drawn="text"
+  caption="Adding a friend."
+  width={72}
+  height={13}
+  nodes={[
+    { id: 'you', label: 'You', x: 2, y: 5, w: 14 },
+    { id: 'friend', label: 'Your friend', x: 55, y: 5, w: 15 },
+    { id: 'room', label: 'Your own room', x: 26, y: 10, w: 20 },
+  ]}
+  edges={[
+    { step: 1, path: [[9, 4], [9, 1], [62, 1], [62, 4]], label: 'invite link or quick code', at: [23, 0] },
+    { step: 2, path: [[54, 6], [16, 6]], label: 'asks to be friends', at: [27, 5] },
+    { step: 3, path: [[9, 8], [9, 11], [25, 11]], label: 'meet here', at: [11, 9] },
+    { step: 3, path: [[62, 8], [62, 11], [46, 11]] },
+  ]}
+  steps={[
+    { title: 'Send an invite', text: 'A link that waits up to 30 days, or a quick code for someone sitting next to you.', nodes: ['you', 'friend'] },
+    { title: 'They ask', text: 'Their request shows up for you, with their fingerprint, so you know nobody slipped in between.', nodes: ['friend', 'you'] },
+    { title: 'Meet in your own room', text: 'A room only the two of you can find, with a new name every day.', nodes: ['you', 'friend', 'room'] },
+  ]}
+/>
+
+## Sending a message
+
+<Diagram
+  drawn="text"
+  caption="How a message gets to a friend."
+  width={72}
+  height={15}
+  nodes={[
+    { id: 'relays', label: 'Public relays', x: 26, y: 0, w: 20 },
+    { id: 'you', label: 'You', x: 2, y: 6, w: 14 },
+    { id: 'friend', label: 'Your friend', x: 55, y: 6, w: 15 },
+    { id: 'lighthouse', label: 'Lighthouse', x: 26, y: 12, w: 20 },
+  ]}
+  edges={[
+    { step: 1, path: [[8, 5], [8, 1], [25, 1]], label: 'signed note', at: [10, 0] },
+    { step: 1, path: [[62, 5], [62, 1], [46, 1]], label: 'signed note', at: [48, 0] },
+    { step: 2, path: [[16, 7], [54, 7]], both: true, label: 'direct, encrypted', at: [26, 6] },
+    { step: 3, path: [[8, 9], [8, 13], [25, 13]], label: 'sealed letter', at: [10, 11] },
+    { step: 4, path: [[46, 13], [62, 13], [62, 9]], label: 'picked up', at: [47, 11] },
+  ]}
+  steps={[
+    { title: 'Find each other', text: 'Both browsers leave a small signed note on public relays. The relays only learn that two strangers want to meet.', nodes: ['you', 'relays', 'friend'] },
+    { title: 'Talk directly', text: 'Browser to browser, signed and encrypted. Nobody in the middle.', nodes: ['you', 'friend'] },
+    { title: 'Friend away?', text: 'The message goes to a Lighthouse instead, sealed so only your friend’s devices can open it.', nodes: ['you', 'lighthouse'] },
+    { title: 'They’re back', text: 'Their Pigeon picks it up. The Lighthouse never knew what was in it, or who it was from.', nodes: ['lighthouse', 'friend'] },
+  ]}
+/>
+
+Lighthouses are peers anyone can run. Pigeon starts with three, called Loft, Dovecote and Perch.
+
+## Who sees what
+
+| Who | Sees | Can't see |
+| --- | --- | --- |
+| Public relays | That two browsers want to meet | What you say |
+| A relay for tricky networks | Encrypted packets passing through | What's in them |
+| A Lighthouse | Sealed mail, for 30 days at most, and your IP while you're connected | What's in it, or who it's from |
+| Pigeon's server | Nothing: there isn't one | |
+| Your friend | Your messages, which is the point | |
+
+## Back on my old ThinkPad
+
+When I grew up, all I had was a bulky old ThinkPad with Windows XP. Pigeon is that desktop again: windows, a taskbar, a buddy list, all on a CRT monitor with scanlines and a slight curve.
+
+It's not a copy, though. No Microsoft logos, wallpapers, icons or sounds: everything is either openly licensed or drawn for Pigeon. On a phone you get the Kestrel Pocket instead, a 2003 handheld that never existed.
+
+## Crypto, with a safety net
+
+Cryptography is the part I'm normally not comfortable with. Signatures, sealed mail, codes you read out loud to a friend. I used AI to get there, which is exactly why I didn't want to trust any of it blindly.
+
+So Pigeon checks itself against answers it didn't write: published test vectors for every piece of crypto it uses. And it has planted bugs, deliberately broken versions of its own code, that the tests have to catch. If breaking something doesn't turn a test red, that test wasn't doing anything.
+
+## Try it
+
+Open [pigeon.tomszir.com](https://pigeon.tomszir.com), pick a name, and send a friend an invite link. Or try it alone in two browsers.
+
+It's early: chatting works, even with friends who are offline, and files, groups and pages come later. Nobody has audited it yet, so don't trust it with anything that matters. But two browsers really do talk with nobody in between, and that still makes me smile.

@@ -7,3 +7,6 @@
 
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable
+
+/building/aloft/aloft-demo-*
+  Cache-Control: public, max-age=31536000, immutable

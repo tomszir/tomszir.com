@@ -2,10 +2,13 @@
 import type { MarkdownHeading } from 'astro'
 import '../styles/prose.css'
 import Icon from './Icon.astro'
+// The viewer for the text's pictures, beside the text rather than in it, so a post's own look
+// never reaches it.
+import Lightbox from './Lightbox.astro'
 // The blocks write-ups import from MDX. Imported here too so their styles join the page's own and
 // get hashed into its Content-Security-Policy; from MDX alone they arrive too late and are blocked.
+import './write-up/AloftThemes.astro'
 import './write-up/Decision.astro'
-import './write-up/Flow.astro'
 import './write-up/Note.astro'
 
 interface Props {
@@ -18,7 +21,7 @@ const sections = headings.filter((heading) => heading.depth === 2)
 ---
 
 <div class="progress" aria-hidden="true" data-progress hidden></div>
-<div class:list={['article', { 'has-contents': sections.length >= 2 }]}>
+<div class:list={['article', { 'has-contents': sections.length >= 2 }]} data-viewer>
   {
     sections.length >= 2 && (
       <nav class="contents" aria-label="On this page">
@@ -39,6 +42,7 @@ const sections = headings.filter((heading) => heading.depth === 2)
   <div class="prose">
     <slot />
   </div>
+  <Lightbox />
 </div>
 
 <template id="copy-icons">

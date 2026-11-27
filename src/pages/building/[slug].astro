@@ -1,62 +1,208 @@
 ---
+import { getImage, Image, Picture } from 'astro:assets'
 import { render } from 'astro:content'
 import type { GetStaticPaths } from 'astro'
 import Article from '../../components/Article.astro'
 import Icon from '../../components/Icon.astro'
+import JsonLd from '../../components/JsonLd.astro'
+import Lightbox from '../../components/Lightbox.astro'
 import Base from '../../layouts/Base.astro'
-import { readingMinutes } from '../../lib/posts'
-import { getProducts, getWriteUp, type Product, productFacts } from '../../lib/products'
+import { formatDate, getPosts, readingMinutes } from '../../lib/posts'
+import {
+  getProducts,
+  getWriteUp,
+  type Product,
+  productDemo,
+  productFacts,
+} from '../../lib/products'
+import { productData } from '../../lib/structured-data'
 
 export const getStaticPaths = (async () => {
   const products = await getProducts()
+  const at = (index: number) => products[(index + products.length) % products.length]
+  // Both neighbours, wrapping round; with two products they'd be the same one, so only the next.
   return products.map((product, index) => ({
     params: { slug: product.id },
-    props: { product, next: products[(index + 1) % products.length] },
+    props: {
+      product,
+      previous: products.length > 2 ? at(index - 1) : undefined,
+      next: products.length > 1 ? at(index + 1) : undefined,
+    },
   }))
 }) satisfies GetStaticPaths
 
 interface Props {
   product: Product
+  previous: Product | undefined
   next: Product | undefined
 }
 
-const { product, next } = Astro.props
-const { name, url, description, status } = product.data
+const { product, previous, next } = Astro.props
+const neighbours = [
+  previous && { product: previous, label: 'Previous', back: true },
+  next && { product: next, label: 'Next', back: false },
+].filter((neighbour) => neighbour !== undefined)
+const { name, icon, url, install, release, links, post, tryIt, images, description, status } =
+  product.data
+// Linked only while it's in this build: a draft post shows on the dev server alone.
+const story = post ? (await getPosts()).find((entry) => entry.id === post) : undefined
+// Each picture links to its full size: the viewer shows it, and without JavaScript the link opens it.
+// The card shows only with a demo in this build, never as a dead button (src/lib/demo.ts). Where
+// it shows, trying is the page's one primary action; elsewhere the first store is.
+const demo = await productDemo(product)
+const showTry = tryIt !== undefined && demo !== undefined
+// The site's link icons: north-east leaves the site, east stays on it.
+const linkIcon = (href: string) => (href.startsWith('/') ? 'arrow-right' : 'arrow-up-right')
+const pictures = await Promise.all(
+  images.map(async (image) => ({
+    ...image,
+    full: await getImage({ src: image.src, format: 'webp' }),
+  })),
+)
 const writeUp = await getWriteUp(product)
 const rendered = writeUp ? await render(writeUp) : undefined
 ---
 
 <Base title={name} description={description}>
+  {install.length > 0 && <JsonLd slot="head" data={productData(product)} />}
   <article class="container">
-    <header class="page-head">
+    <header class="page-head product-head">
       <a class="back" href="/building">Building</a>
-      <h1 class="page-title" style={{ viewTransitionName: `product-${product.id}` }}>{name}</h1>
+      <h1 class="page-title product-title">
+        <Image class="app-icon" src={icon} alt="" width={144} height={144} />
+        <span style={{ viewTransitionName: `product-${product.id}` }}>{name}</span>
+      </h1>
       <p class="lede">{description}</p>
-    </header>
-    <div class="panel summary">
-      <dl class="facts">
+      <div class="product-actions">
         {
-          productFacts(product).map((fact) => (
-            <div class="fact">
-              <dt>{fact.label}</dt>
-              <dd>{fact.value}</dd>
+          (install.length > 0 || url) && (
+            <div class="install">
+              {install.length > 0
+                ? install.map((place, index) => (
+                    <a
+                      class:list={['button', { 'button-primary': index === 0 && !showTry }]}
+                      href={place.url}
+                      data-install={index === 0 ? '' : undefined}
+                    >
+                      {place.icon && <Icon name={place.icon} />}
+                      {place.label}
+                      <Icon name={linkIcon(place.url)} />
+                    </a>
+                  ))
+                : url && (
+                    <a class="button button-primary" href={url}>
+                      Visit {name}
+                      <Icon name="arrow-up-right" />
+                    </a>
+                  )}
             </div>
-          ))
+          )
         }
-        <div class="fact">
-          <dt>Status</dt>
-          <dd>{status}</dd>
-        </div>
-      </dl>
+        {
+          (links.length > 0 || story) && (
+            <p class="product-links">
+              {story && (
+                <a class="link" href={`/writing/${story.id}`}>
+                  Read the story
+                </a>
+              )}
+              {links.map((link) => (
+                <a class="link" href={link.url}>
+                  {link.label}
+                </a>
+              ))}
+            </p>
+          )
+        }
+      </div>
+    </header>
+    <dl class="panel facts-row">
       {
-        url && (
-          <a class="button button-primary" href={url}>
-            Visit {name}
-            <Icon name="arrow-up-right" />
-          </a>
+        productFacts(product).map((fact) => (
+          <div>
+            <dt>{fact.label}</dt>
+            <dd>{fact.value}</dd>
+          </div>
+        ))
+      }
+      {
+        release && (
+          <div>
+            <dt>Version</dt>
+            <dd>
+              <a class="link" href={release.url}>
+                {release.version}
+              </a>
+            </dd>
+          </div>
         )
       }
-    </div>
+      <div>
+        <dt>Status</dt>
+        <dd>{status}</dd>
+      </div>
+    </dl>
+    {
+      showTry && tryIt && demo && (
+        <section class="panel try" aria-labelledby="try-title">
+          <div class="try-text">
+            <span class="meta muted">Try it now</span>
+            <h2 id="try-title" class="try-title">
+              {tryIt.title}
+            </h2>
+            <p class="muted">{tryIt.text}</p>
+          </div>
+          <div class="try-action">
+            <p class="try-desktop meta muted">For Chrome and Firefox on a computer</p>
+            <button
+              class="button button-primary try-button"
+              type="button"
+              data-try={`/building/${product.id}/${demo.file}`}
+            >
+              {tryIt.label}
+              <Icon name="arrow-right" class="try-go" />
+              <Icon name="monitor" class="try-computer" />
+            </button>
+          </div>
+        </section>
+      )
+    }
+    {showTry && <script is:inline type="module" src="/try.js" />}
+    {
+      pictures.length > 0 && (
+        <div
+          class="pictures"
+          style={`--thumb:${pictures[0]?.src.width} / ${pictures[0]?.src.height}`}
+          data-viewer
+        >
+          {pictures.map((picture, index) => (
+            <a
+              class="picture-link"
+              href={picture.full.src}
+              data-viewer-item
+              data-width={picture.full.attributes.width}
+              data-height={picture.full.attributes.height}
+            >
+              <Picture
+                class="picture"
+                src={picture.src}
+                alt={picture.alt}
+                formats={['avif', 'webp']}
+                widths={index === 0 ? [640, 1104, 2208] : [320, 640]}
+                sizes={
+                  index === 0
+                    ? '(min-width: 1200px) 1104px, calc(100vw - 2 * var(--gutter))'
+                    : '(min-width: 1200px) 264px, (min-width: 720px) calc(25vw - var(--gutter)), calc(50vw - var(--gutter))'
+                }
+                loading={index === 0 ? 'eager' : 'lazy'}
+                fetchpriority={index === 0 ? 'high' : 'auto'}
+              />
+            </a>
+          ))}
+          <Lightbox />
+        </div>
+      )
+    }
     {
       writeUp && rendered && (
         <div class="write-up">
@@ -67,14 +213,44 @@ const rendered = writeUp ? await render(writeUp) : undefined
       )
     }
     {
-      next && next.id !== product.id && (
-        <nav class="section" aria-label="Next product">
-          <span class="section-label">Next</span>
-          <a class="panel next" href={`/building/${next.id}`}>
+      story && (
+        <section class="section" aria-labelledby="story-title">
+          <span class="section-label">Read about it</span>
+          <a
+            class="panel product story"
+            href={`/writing/${story.id}`}
+            style={`--mark:url(/building/${product.id}/mark.svg)`}
+          >
+            <span class="meta muted">
+              {formatDate(story.data.published)} · {readingMinutes(story)} min read
+            </span>
             <Icon name="arrow-right" size={16} class="panel-arrow" />
-            <span class="next-name">{next.data.name}</span>
-            <span class="muted">{next.data.description}</span>
+            <span id="story-title" class="neighbour-name">
+              {story.data.title}
+            </span>
+            <span class="muted">{story.data.description}</span>
           </a>
+        </section>
+      )
+    }
+    {
+      neighbours.length > 0 && (
+        <nav class="section" aria-label="More products">
+          <span class="section-label">More</span>
+          <div class="neighbours">
+            {neighbours.map(({ product: neighbour, label, back }) => (
+              <a
+                class="panel product neighbour"
+                href={`/building/${neighbour.id}`}
+                style={`--mark:url(/building/${neighbour.id}/mark.svg)`}
+              >
+                <span class="meta muted">{label}</span>
+                <Icon name="arrow-right" size={16} class:list={['panel-arrow', { back }]} />
+                <span class="neighbour-name">{neighbour.data.name}</span>
+                <span class="muted">{neighbour.data.description}</span>
+              </a>
+            ))}
+          </div>
         </nav>
       )
     }
@@ -82,34 +258,253 @@ const rendered = writeUp ? await render(writeUp) : undefined
 </Base>
 
 <style>
-  .summary {
+  /* The app icon sits in the title's line, sized with it. */
+  .product-title {
+    display: flex;
+    align-items: center;
+    gap: 0.22em;
+  }
+
+  .page-head :global(.app-icon) {
+    flex: none;
+    width: 0.86em;
+    height: 0.86em;
+    border-radius: 0.2em;
+  }
+
+  /* The facts follow the buttons closely: they belong to the same header. */
+  .product-head {
+    padding-bottom: 24px;
+  }
+
+  /* The store buttons on the left and the references on the right, in one row; on a phone the
+     buttons stack full width rather than squeeze, and the links follow under them, centred. */
+  .product-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 24px;
+    margin-top: 12px;
+  }
+
+  .install {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (max-width: 640px) {
+    .install {
+      flex: 1 1 100%;
+    }
+
+    .install .button {
+      flex: 1 1 100%;
+    }
+
+    /* Under the full-width buttons, the links sit centred as a pair. */
+    .product-links {
+      flex: 1 1 100%;
+      justify-content: center;
+    }
+  }
+
+  /* Everything else is a reference, not an action: plain links. */
+  .product-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 24px;
+  }
+
+  .product-links .link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* A call to try it: the words on the left, the button centred on the right; stacked on a phone. */
+  .try {
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 16px 48px;
-    padding: 12px 24px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px 40px;
+    margin-top: 16px;
+    padding: 32px 36px;
   }
 
-  .facts {
-    flex: 999 1 420px;
-    min-width: 0;
+  .try-text {
+    display: grid;
+    flex: 1 1 320px;
+    gap: 8px;
   }
 
-  .summary .button {
-    margin-block: 12px;
+  .try-title {
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+
+  .try-button {
+    flex: none;
+    min-height: 52px;
+    padding-inline: 24px;
+    font-size: 16px;
+  }
+
+  /* On a phone or tablet the demo can't be tried: it's the desktop extension's bar, driven from a
+     keyboard. The button stays, disabled (src/scripts/try.ts) and marked with a computer, under a
+     note saying where it works. */
+  .try-action {
+    display: grid;
+    flex: none;
+    gap: 10px;
+    justify-items: center;
+  }
+
+  .try-desktop,
+  .try-button :global(.try-computer) {
+    display: none;
+  }
+
+  @media (max-width: 640px), (hover: none) and (pointer: coarse) {
+    .try-desktop {
+      display: block;
+    }
+
+    .try-button :global(.try-computer) {
+      display: block;
+    }
+
+    .try-button :global(.try-go) {
+      display: none;
+    }
+
+    .try-button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .try {
+      padding: 22px 20px 20px;
+    }
+
+    .try-action {
+      flex: 1 1 100%;
+    }
+
+    .try-button {
+      width: 100%;
+    }
+  }
+
+  /* The facts as a row of panel cells: label on top, value below. */
+  .facts-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 20px 24px;
+    margin: 0;
+    padding: 20px 24px 22px;
+  }
+
+  .facts-row dt {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--step-meta);
+  }
+
+  .facts-row dd {
+    margin: 8px 0 0;
+    font-size: 17px;
+  }
+
+  /* The first picture across the row, the rest at one size in a row under it: four across, two on
+     a phone. */
+  .pictures {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  /* Each picture sits in a panel, since the frames share the page's ground; it opens the viewer. */
+  .picture-link {
+    display: flex;
+    padding: 8px;
+    border-radius: var(--radius-panel);
+    background: var(--panel);
+    cursor: zoom-in;
+    transition: background-color 0.25s ease;
+  }
+
+  .picture-link:hover,
+  .picture-link:focus-visible {
+    background: var(--raised);
+  }
+
+  .picture-link:first-child {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 720px) {
+    .pictures {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .picture-link:not(:first-child) {
+      padding: 6px;
+    }
+  }
+
+  .pictures :global(.picture) {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-row);
+  }
+
+  /* Thumbnails take the lead picture's shape (--thumb) so the row stays even, and a picture of
+     another shape, such as a phone's, fits inside it whole on the page's ground. */
+  .picture-link:not(:first-child) :global(.picture) {
+    aspect-ratio: var(--thumb);
+    object-fit: contain;
+    background: var(--bg);
   }
 
   .write-up {
     padding-top: 88px;
   }
 
-  .next {
+  /* The products either side, with their marks in the corner like the Building cards. */
+  .neighbours {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .neighbour,
+  .story {
     gap: 6px;
     justify-content: flex-start;
     padding-right: 56px;
   }
 
-  .next-name {
+  .neighbour .meta,
+  .story .meta {
+    margin-bottom: 14px;
+  }
+
+  .neighbour :global(.back) {
+    rotate: 180deg;
+  }
+
+  .neighbour-name {
     font-size: 26px;
     font-weight: 500;
     letter-spacing: -0.025em;

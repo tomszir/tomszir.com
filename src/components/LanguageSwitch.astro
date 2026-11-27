@@ -1,80 +1,141 @@
 ---
 import { langOf, switchPath, t } from '../i18n'
+import Icon from './Icon.astro'
 
 // With file output the build sees `/cv.html`, the dev server `/cv`.
 const path = Astro.url.pathname.replace(/(\/?index)?\.html$/, '') || '/'
 const lang = langOf(path)
+// Each language named in itself, so a reader finds theirs whichever page they're on.
 const options = [
   { lang: 'en', code: 'EN', name: 'English' },
-  { lang: 'lv', code: 'LV', name: 'Latviski' },
+  { lang: 'lv', code: 'LV', name: 'Latviešu' },
 ] as const
+const current = options.find((option) => option.lang === lang) ?? options[0]
 ---
 
-<div class="switch" role="group" aria-label={t(lang).language} data-current={lang}>
-  <span class="mark" aria-hidden="true"></span>
-  {
-    options.map((option) => (
-      <a
-        href={switchPath(path, option.lang)}
-        hreflang={option.lang}
-        lang={option.lang}
-        aria-label={option.name}
-        aria-current={option.lang === lang ? 'true' : undefined}
-      >
-        {option.code}
-      </a>
-    ))
+<details class="language" data-language>
+  <summary class="button" aria-label={`${t(lang).language}: ${current.name}`}>
+    <Icon name="globe" />
+    <span class="code">{current.code}</span>
+    <Icon name="chevron-down" size={14} class="chevron" />
+  </summary>
+  <ul class="options">
+    {
+      options.map((option) => (
+        <li>
+          <a
+            href={switchPath(path, option.lang)}
+            hreflang={option.lang}
+            lang={option.lang}
+            aria-current={option.lang === lang ? 'true' : undefined}
+          >
+            {option.name}
+            {option.lang === lang && <Icon name="check" class="tick" />}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</details>
+
+<script>
+  // A native disclosure, so it works without JavaScript; this closes it the way a menu closes, on
+  // a click elsewhere or Esc, with focus back on its button.
+  for (const menu of document.querySelectorAll<HTMLDetailsElement>('[data-language]')) {
+    addEventListener('click', (event) => {
+      if (menu.open && !menu.contains(event.target as Node)) menu.open = false
+    })
+    menu.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && menu.open) {
+        menu.open = false
+        menu.querySelector('summary')?.focus()
+      }
+    })
   }
-</div>
+</script>
 
 <style>
-  /* Both languages on one --panel track, the current one on a --raised mark. The mark moves to the
-     other language under the pointer or focus, timed like the nav pill. */
-  .switch {
+  .language {
     position: relative;
-    isolation: isolate;
-    display: inline-grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 4px;
-    border-radius: var(--radius-control);
-    background: var(--panel);
   }
 
-  .mark {
-    position: absolute;
-    inset: 4px auto 4px 4px;
-    z-index: -1;
-    width: calc(50% - 4px);
-    border-radius: calc(var(--radius-control) - 2px);
-    background: var(--raised);
-    transition: transform 0.45s var(--ease);
+  summary {
+    gap: 8px;
+    padding: 0 12px;
+    list-style: none;
   }
 
-  .switch[data-current='lv'] .mark,
-  .switch[data-current='en']:has(a:not([aria-current]):is(:hover, :focus-visible)) .mark {
-    transform: translateX(100%);
+  summary::-webkit-details-marker {
+    display: none;
   }
 
-  .switch[data-current='lv']:has(a:not([aria-current]):is(:hover, :focus-visible)) .mark {
-    transform: none;
-  }
-
-  a {
-    display: grid;
-    place-items: center;
-    min-width: 42px;
-    min-height: 36px;
-    padding: 0 10px;
-    border-radius: calc(var(--radius-control) - 2px);
+  .code {
     font-family: var(--font-mono);
     font-size: var(--step-meta);
     font-weight: 500;
-    color: var(--muted);
-    transition: color 0.2s ease;
   }
 
-  a[aria-current],
-  a:hover {
-    color: var(--fg);
+  .chevron {
+    color: var(--muted);
+    transition: rotate 0.25s var(--ease);
+  }
+
+  [open] .chevron {
+    rotate: 180deg;
+  }
+
+  [open] summary {
+    background: var(--raised);
+  }
+
+  /* The options on a panel under the button, lifted by the one soft shadow the site allows. */
+  .options {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 10;
+    display: grid;
+    min-width: 180px;
+    padding: 6px;
+    border-radius: var(--radius-panel);
+    background: var(--panel);
+    box-shadow: 0 16px 40px -16px rgb(0 0 0 / 0.5);
+    animation: options-in 0.2s var(--ease);
+  }
+
+  .options a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: var(--radius-row);
+    font-size: 15px;
+    transition: background-color 0.2s ease;
+  }
+
+  .options a:hover,
+  .options a:focus-visible {
+    background: var(--raised);
+  }
+
+  .options :global(.tick) {
+    color: var(--accent);
+  }
+
+  @keyframes options-in {
+    from {
+      opacity: 0;
+      translate: 0 -4px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chevron,
+    .options {
+      transition: none;
+      animation: none;
+    }
   }
 </style>

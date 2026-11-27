@@ -25,11 +25,12 @@ interface Props {
 
 const { post, newer, older } = Astro.props
 const { Content, headings } = await render(post)
-const { title, description, published, updated } = post.data
+const { title, description, published, updated, look } = post.data
 ---
 
 <Base title={title} description={description} article={{ published, updated }}>
   <JsonLd slot="head" data={postData(post)} />
+  {look && <link slot="head" rel="stylesheet" href={`/looks/${look}/${look}.css`} />}
   <article class="container">
     <header class="page-head">
       <a class="back" href="/writing">Writing</a>

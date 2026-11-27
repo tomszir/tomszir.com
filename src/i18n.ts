@@ -42,7 +42,6 @@ const en = {
   primary: 'Primary',
   menu: 'Menu',
   close: 'Close',
-  search: 'Search',
   language: 'Language',
   theme: { idle: 'Switch theme', dark: 'Switch to dark theme', light: 'Switch to light theme' },
   footer: {
@@ -130,7 +129,6 @@ const lv: typeof en = {
   primary: 'Galvenā navigācija',
   menu: 'Izvēlne',
   close: 'Aizvērt',
-  search: 'Meklēt',
   language: 'Valoda',
   theme: {
     idle: 'Pārslēgt motīvu',

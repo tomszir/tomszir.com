@@ -30,6 +30,16 @@
     { "name": "mail", "source": "lucide" },
     { "name": "download", "source": "lucide" },
     { "name": "printer", "source": "lucide" },
-    { "name": "github", "source": "simple-icons" }
+    { "name": "globe", "source": "lucide" },
+    { "name": "chevron-down", "source": "lucide" },
+    { "name": "chevron-left", "source": "lucide" },
+    { "name": "chevron-right", "source": "lucide" },
+    { "name": "plus", "source": "lucide" },
+    { "name": "minus", "source": "lucide" },
+    { "name": "scan", "source": "lucide" },
+    { "name": "monitor", "source": "lucide" },
+    { "name": "github", "source": "simple-icons" },
+    { "name": "googlechrome", "source": "simple-icons" },
+    { "name": "firefoxbrowser", "source": "simple-icons" }
   ]
 }
