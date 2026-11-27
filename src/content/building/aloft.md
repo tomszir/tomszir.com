@@ -22,8 +22,8 @@ tryIt:
   asset: aloft-demo-{version}.js
   checkout: ../aloft/.output/demo
 release:
-  version: 1.0.0
-  url: https://github.com/tomszir/aloft-extension/releases/tag/v1.0.0
+  version: 1.0.1
+  url: https://github.com/tomszir/aloft-extension/releases/tag/v1.0.1
 links:
   - label: Source on GitHub
     url: https://github.com/tomszir/aloft-extension
