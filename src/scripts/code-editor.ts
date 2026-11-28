@@ -21,6 +21,7 @@ import {
   type DecorationSet,
   drawSelection,
   EditorView,
+  type EditorViewConfig,
   highlightActiveLine,
   keymap,
   lineNumbers,
@@ -175,10 +176,26 @@ function diagnostic(state: EditorState, { line, column, message }: Problem): Dia
   return { from, to: Math.min(from + word, at.to), severity: 'error', message }
 }
 
+/**
+ * A view whose styles come in as a constructed stylesheet. CodeMirror's styles go through
+ * style-mod, which writes them into a <style> element when the root has a head, and the page's
+ * Content-Security-Policy blocks that element. Without a head it uses a constructed sheet, which the
+ * policy allows. It decides once per document, when the first view mounts its styles, so the head
+ * is hidden only while that view is built.
+ */
+function adoptedStylesView(config: EditorViewConfig) {
+  Object.defineProperty(document, 'head', { value: null, configurable: true })
+  try {
+    return new EditorView(config)
+  } finally {
+    Reflect.deleteProperty(document, 'head')
+  }
+}
+
 /** Puts an editor where the textarea was, labelled as it was, and keeps the textarea's value. */
 export function codeEditor(textarea: HTMLTextAreaElement, { onChange, check }: Options = {}) {
   const label = textarea.labels?.[0]?.textContent ?? 'Code'
-  const view = new EditorView({
+  const view = adoptedStylesView({
     state: EditorState.create({
       doc: textarea.value,
       extensions: [
