@@ -1,0 +1,61 @@
+name: releases
+
+# Moves each product's pinned release to the latest one it has published, in a pull request on
+# the releases/pin branch (scripts/pin-releases.mjs). check builds that pull request, demos
+# included; merging it stays Toms's call. The branch is rebuilt from main on every run.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: releases
+  cancel-in-progress: false
+
+jobs:
+  pin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d # v5.2.4
+      - id: pin
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/pin-releases.mjs
+      # GITHUB_TOKEN can't open pull requests here, and one it opened wouldn't run check, so a
+      # token for this repository (Contents and Pull requests write) is handed to this step.
+      - if: ${{ steps.pin.outputs.moved }}
+        env:
+          TOKEN: ${{ secrets.RELEASES_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+          MOVED: ${{ steps.pin.outputs.moved }}
+          BRANCH: releases/pin
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Add the RELEASES_TOKEN secret to open the pull request for $MOVED."
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -qc "$BRANCH"
+          git commit -qam "chore(content): pin $MOVED"
+          auth=$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          # Pushing the same files again would only rerun check on the open pull request.
+          if git fetch -q origin "$BRANCH" 2>/dev/null && git diff --quiet FETCH_HEAD HEAD; then
+            echo "$BRANCH already pins $MOVED."
+          else
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
+              push -q --force origin "HEAD:$BRANCH"
+          fi
+          if [ "$(gh pr list --head "$BRANCH" --state open --json number --jq length)" = 0 ]; then
+            gh pr create --head "$BRANCH" --base main --title "chore(content): pin $MOVED" \
+              --body "The latest releases. check builds each product page and checks its demo against the release's SHA-256. Later runs rebuild this branch from main."
+          else
+            gh pr edit "$BRANCH" --title "chore(content): pin $MOVED"
+          fi
