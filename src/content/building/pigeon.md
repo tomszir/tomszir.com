@@ -11,8 +11,8 @@ card: src/assets/pigeon/card.png
 order: 3
 post: pigeon
 release:
-  version: 0.8.2
-  url: https://github.com/tomszir/pigeon/releases/tag/v0.8.2
+  version: 0.8.3
+  url: https://github.com/tomszir/pigeon/releases/tag/v0.8.3
 links:
   - label: Source on GitHub
     url: https://github.com/tomszir/pigeon
