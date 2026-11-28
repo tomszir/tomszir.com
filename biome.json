@@ -6,7 +6,15 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/dist", "!src/icons", "!src/content", "!src/fonts"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!src/icons",
+      "!src/content",
+      "!src/fonts",
+      "!public/looks/pigeon/pages",
+      "!vendor/pigeonhtml"
+    ]
   },
   "formatter": {
     "indentStyle": "space",

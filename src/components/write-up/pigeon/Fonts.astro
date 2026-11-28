@@ -1,0 +1,24 @@
+---
+/**
+ * The era's font names, drawn in the clone Pigeon draws each with: its base stylesheet's mapping,
+ * as scripts/pigeonhtml-examples.mjs copies it. The look's two faces, so styled in its own
+ * stylesheet with a fallback in prose.css.
+ */
+import examples from '../../../content/pigeonhtml/examples.json'
+
+const faces = [
+  { face: 'sans', clone: 'Wine’s Tahoma clone', names: examples.fonts.sans },
+  { face: 'mono', clone: 'Bitstream Vera Sans Mono', names: examples.fonts.mono },
+]
+---
+
+<ul class="fonts">
+  {
+    faces.map(({ face, clone, names }) => (
+      <li class={`font font-${face}`}>
+        <span class="font-names">{names.join(', ')}</span>
+        <span class="font-clone">drawn in {clone}</span>
+      </li>
+    ))
+  }
+</ul>

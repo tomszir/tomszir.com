@@ -118,7 +118,9 @@ function unzip(path, name) {
 
 const errors = []
 const warnings = []
-const all = files(DIST)
+// Pages a post shows in a frame are PigeonHTML, written and checked by
+// scripts/pigeonhtml-examples.mjs, not the site's own pages.
+const all = files(DIST).filter((path) => !relative(DIST, path).startsWith('looks/pigeon/pages/'))
 const alternatesByPage = new Map()
 
 for (const file of all.filter((path) => path.endsWith('.html'))) {

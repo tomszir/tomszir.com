@@ -1,0 +1,34 @@
+---
+/**
+ * The elements that meet one fate in PigeonHTML, grouped by what they're for: `kept` and `dropped`
+ * name every element in Pigeon's own tables, `unwrapped` a sample of the rest, each checked
+ * against the sanitizer (scripts/pigeonhtml-examples.mjs). A table of two columns, so prose.css
+ * sets the names in mono and the Pigeon look draws it as a list view.
+ */
+import examples from '../../../content/pigeonhtml/examples.json'
+
+interface Props {
+  fate: keyof typeof examples.elements
+}
+
+const rows = examples.elements[Astro.props.fate]
+---
+
+<table class="elements">
+  <thead>
+    <tr>
+      <th>For</th>
+      <th>Elements</th>
+    </tr>
+  </thead>
+  <tbody>
+    {
+      rows.map(({ label, names }) => (
+        <tr>
+          <td>{label}</td>
+          <td>{names.join(' ')}</td>
+        </tr>
+      ))
+    }
+  </tbody>
+</table>

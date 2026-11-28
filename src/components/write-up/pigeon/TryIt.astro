@@ -1,0 +1,61 @@
+---
+/**
+ * An editor for a PigeonHTML page of your own: as you type, Pigeon's validator marks what it would
+ * take out, in the code and in a list, and the page is drawn in an Explorer window. The textarea
+ * becomes a code editor (src/scripts/code-editor.ts). Needs JavaScript, so it stays hidden until
+ * `/pigeonhtml.js`, loaded as the section comes near (src/scripts/pigeonhtml-post.ts), shows it.
+ * In the RSS feed it's a line pointing to the page instead. Its icon is inlined, as Diagram's are.
+ * Styled in prose.css and the Pigeon look.
+ */
+import indentIcon from '../../../icons/list-indent-increase.svg?raw'
+
+interface Props {
+  source: string
+  height?: number
+}
+
+const { source, height = 300 } = Astro.props
+const indent = indentIcon.replace('<svg ', '<svg width="16" height="16" aria-hidden="true" ')
+---
+
+{
+  Astro.locals.feed ? (
+    <p>The editor works on the post's own page, where you can write a page and watch Pigeon take it apart.</p>
+  ) : (
+<div class="try-slot" data-try-slot>
+<div class="try" data-try hidden>
+  <div class="try-bar">
+    <label class="try-label" for="try-source">Your page</label>
+    <button type="button" class="button try-format" data-try-format>
+      <Fragment set:html={indent} />
+      Format
+    </button>
+  </div>
+  <textarea id="try-source" class="try-source" spellcheck="false" rows={source.split('\n').length + 1}
+    >{source}</textarea
+  >
+  <div class="try-result" aria-live="polite">
+    <p class="try-verdict" data-try-verdict></p>
+    <ol class="try-problems" data-try-problems></ol>
+  </div>
+  <div class="explorer-window">
+    <p class="explorer-address">
+      <span class="explorer-label">Address</span>
+      <span class="explorer-url">pigeon://you</span>
+    </p>
+    <iframe
+      class="explorer-view"
+      src="/looks/pigeon/pages/blank.html"
+      title="Your page, as Pigeon Explorer shows it"
+      sandbox="allow-same-origin"
+      height={height}></iframe>
+    <p class="explorer-status">
+      <span>Done</span>
+      <span data-try-size></span>
+    </p>
+  </div>
+</div>
+<script is:inline type="module" src="/pigeonhtml-post.js"></script>
+</div>
+  )
+}

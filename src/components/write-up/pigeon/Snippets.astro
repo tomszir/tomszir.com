@@ -1,0 +1,60 @@
+---
+/**
+ * Sources run through Pigeon's sanitizer, each as its own block the way a compiler reports an
+ * error: what's dropped struck through, a note under it naming what went (`notes`, on by default),
+ * and the post's words under the block. The sources and what's dropped come from
+ * scripts/pigeonhtml-examples.mjs, which checks each mark against Pigeon's validator. Styled in
+ * prose.css and the Pigeon look.
+ */
+import { Code } from 'astro:components'
+import examples from '../../../content/pigeonhtml/examples.json'
+import { codeThemes } from '../../../lib/code-themes'
+import { markedCode, markRanges, type Note } from '../../../lib/marked-code'
+
+type Snippet = keyof typeof examples.snippets
+
+interface Props {
+  rows: { snippet: Snippet; text: string; notes?: boolean }[]
+}
+
+const { rows } = Astro.props
+
+/**
+ * A note under each line with dropped parts, starting under the first and naming them all, or one
+ * under the last line when nothing in it is singled out.
+ */
+function notesFor(snippet: Snippet): Note[] {
+  const { source, marks, removed } = examples.snippets[snippet]
+  if (marks.length > 0) {
+    const byLine = Map.groupBy(marks, (mark) => mark.line)
+    return [...byLine].map(([line, onLine]) => ({
+      line,
+      column: Math.min(...onLine.map((mark) => mark.column)),
+      text: `└─ dropped: ${onLine.map((mark) => mark.label).join(', ')}`,
+    }))
+  }
+  const last = source.split('\n').length
+  const text = removed.length === 0 ? '└─ nothing dropped' : '└─ dropped: the whole page'
+  return [{ line: last, column: 1, text }]
+}
+---
+
+<ul class="snippets">
+  {
+    rows.map(({ snippet, text, notes = true }) => {
+      const { source, marks } = examples.snippets[snippet]
+      return (
+        <li class="snippet">
+          <Code
+            code={source}
+            lang="html"
+            themes={codeThemes}
+            defaultColor={false}
+            transformers={[markedCode(markRanges(source, marks), notes ? notesFor(snippet) : [])]}
+          />
+          <p>{text}</p>
+        </li>
+      )
+    })
+  }
+</ul>

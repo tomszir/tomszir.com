@@ -12,7 +12,7 @@ Most of the work happens at build time:
 2. `scripts/stamp-build.mjs` measures each page, gzipped together with the CSS and JS it loads, and writes the size, the build date and the commit into it. That's where the numbers on the home page and in the footer come from.
 3. `scripts/check-dist.mjs` reads every built page and fails if one is missing a `lang`, a title, a description or a single `h1`, if anything loads from another origin, if the home page goes over 14 KB compressed, or if a printed size is more than 0.1 KB off the real one.
 
-The 14 KB budget is roughly what fits in the first round trip of a new connection. The home page is at about 11.7 KB.
+The 14 KB budget is roughly what fits in the first round trip of a new connection. The home page is at about 13.6 KB, the Latvian one at 13.9 KB.
 
 Every page works with JavaScript off. The scripts that exist only add to it: the theme set before first paint, the theme toggle, the clock and the sun's elevation over Riga, the moving highlight in lists and the nav, the sticky header, the phone menu and the copy buttons. Page-to-page animation is plain CSS view transitions, not a client-side router.
 
@@ -38,29 +38,32 @@ GitHub Actions runs the same check on every push and pull request. Cloudflare bu
 
 Also useful:
 
-| Command                      | Does                                                              |
-| ---------------------------- | ----------------------------------------------------------------- |
-| `pnpm fmt`                   | Formats everything with Biome                                     |
-| `pnpm build && pnpm preview` | The production build, served locally                              |
-| `mise run icons:vendor`      | Re-vendors the icons from `vendor/icons.lock.json`                |
-| `mise run fonts:vendor`      | Re-vendors and re-subsets the fonts from `vendor/fonts.lock.json` |
-| `pnpm run deploy`            | Builds and deploys to Cloudflare (needs `wrangler login`)         |
+| Command                        | Does                                                                                   |
+| ------------------------------ | -------------------------------------------------------------------------------------- |
+| `pnpm fmt`                     | Formats everything with Biome                                                          |
+| `pnpm build && pnpm preview`   | The production build, served locally                                                   |
+| `mise run icons:vendor`        | Re-vendors the icons from `vendor/icons.lock.json`                                     |
+| `mise run fonts:vendor`        | Re-vendors and re-subsets the fonts from `vendor/fonts.lock.json`                      |
+| `mise run pigeonhtml:check`    | Fails if the PigeonHTML post's examples are out of date with `../pigeon` (or `PIGEON`) |
+| `mise run pigeonhtml:examples` | Regenerates them, and the sanitizer its editor runs, from that checkout                |
+| `pnpm run deploy`              | Builds and deploys to Cloudflare (needs `wrangler login`)                              |
 
 The dev server doesn't run the stamp step, so the build numbers show as dashes there. Restart it after renaming a content file or changing the content schema.
 
 ## Where things are
 
-| Path                     | What's in it                                                                          |
-| ------------------------ | ------------------------------------------------------------------------------------- |
-| `src/site.ts`            | The facts the pages print: name, roles, experience, links                             |
-| `src/content/writing/`   | Posts, `.md` or `.mdx`                                                                |
-| `src/content/building/`  | One file per product: its facts, in the frontmatter                                   |
-| `src/content/write-ups/` | A product's longer write-up, one file per product id, `draft: true` until done        |
-| `src/pages/`             | The routes                                                                            |
-| `src/components/`        | Layout pieces, and `write-up/` for the blocks posts can use                           |
-| `src/styles/`            | `tokens.css` (colours, type, spacing), `global.css`, and the code highlighting themes |
-| `src/scripts/`           | The small client scripts                                                              |
-| `scripts/`               | Build checks and the vendoring scripts                                                |
+| Path                      | What's in it                                                                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/site.ts`             | The facts the pages print: name, roles, experience, links                                                                                         |
+| `src/content/writing/`    | Posts, `.md` or `.mdx`                                                                                                                            |
+| `src/content/building/`   | One file per product: its facts, in the frontmatter                                                                                               |
+| `src/content/write-ups/`  | A product's longer write-up, one file per product id, `draft: true` until done                                                                    |
+| `src/content/pigeonhtml/` | The PigeonHTML post's examples, made by Pigeon's own sanitizer (`mise run pigeonhtml:examples`); its editor runs the copy in `vendor/pigeonhtml/` |
+| `src/pages/`              | The routes                                                                                                                                        |
+| `src/components/`         | Layout pieces, and `write-up/` for the blocks posts can use                                                                                       |
+| `src/styles/`             | `tokens.css` (colours, type, spacing), `global.css`, and the code highlighting themes                                                             |
+| `src/scripts/`            | The small client scripts                                                                                                                          |
+| `scripts/`                | Build checks and the vendoring scripts                                                                                                            |
 
 ## Writing a post
 

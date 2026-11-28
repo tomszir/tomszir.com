@@ -20,7 +20,7 @@ export async function GET(context: APIContext) {
     items: await Promise.all(
       posts.map(async (post) => {
         const { Content } = await render(post)
-        const html = await container.renderToString(Content)
+        const html = await container.renderToString(Content, { locals: { feed: true } })
         return {
           title: post.data.title,
           description: post.data.description,
