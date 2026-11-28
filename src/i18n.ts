@@ -143,7 +143,7 @@ const lv: typeof en = {
     source: 'Pirmkods',
   },
   intro:
-    'Es veidoju programmatūru, un man rūp, kā tā top. Izstrādātājs Latvijā: kodu rakstu kopš desmit gadu vecuma, profesionāli piecus gadus. Lūk, kas notiek šobrīd.',
+    'Es veidoju programmatūru, un man rūp, kā tā top. Kodu rakstu kopš desmit gadu vecuma, profesionāli piecus gadus. Lūk, kas notiek šobrīd.',
   now: {
     label: 'Šobrīd',
     building: 'Šobrīd veidoju',
