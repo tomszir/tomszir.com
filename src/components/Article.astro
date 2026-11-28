@@ -146,10 +146,11 @@ const sections = headings.filter((heading) => heading.depth === 2)
     update()
   }
 
-  // Each code block gets a copy button, announced to screen readers when it works.
+  // Each code block gets a copy button, announced to screen readers when it works; the few lines
+  // of a snippet in the PigeonHTML post are there to read, not to copy.
   const icons = document.querySelector<HTMLTemplateElement>('#copy-icons')
   if (icons && navigator.clipboard) {
-    for (const pre of document.querySelectorAll<HTMLPreElement>('.prose pre')) {
+    for (const pre of document.querySelectorAll<HTMLPreElement>('.prose pre:not(.snippet pre)')) {
       const wrap = document.createElement('div')
       wrap.className = 'code'
       pre.replaceWith(wrap)

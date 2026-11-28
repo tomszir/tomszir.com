@@ -1,0 +1,56 @@
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; font-src 'self'"><style>@font-face{font-family:"Tahoma";src:url("/looks/pigeon/wine-tahoma.woff2") format("woff2")}
+@font-face{font-family:"Verdana";src:url("/looks/pigeon/wine-tahoma.woff2") format("woff2")}
+@font-face{font-family:"Arial";src:url("/looks/pigeon/wine-tahoma.woff2") format("woff2")}
+@font-face{font-family:"Helvetica";src:url("/looks/pigeon/wine-tahoma.woff2") format("woff2")}
+@font-face{font-family:"Geneva";src:url("/looks/pigeon/wine-tahoma.woff2") format("woff2")}
+@font-face{font-family:"Trebuchet MS";src:url("/looks/pigeon/wine-tahoma.woff2") format("woff2")}
+@font-face{font-family:"Courier New";src:url("/looks/pigeon/vera-sans-mono.ttf") format("truetype")}
+@font-face{font-family:"Courier";src:url("/looks/pigeon/vera-sans-mono.ttf") format("truetype")}
+@font-face{font-family:"Lucida Console";src:url("/looks/pigeon/vera-sans-mono.ttf") format("truetype")}
+@font-face{font-family:"Monaco";src:url("/looks/pigeon/vera-sans-mono.ttf") format("truetype")}
+html{font-family:"Tahoma"}
+pre,tt,code,kbd,samp,xmp,listing,plaintext{font-family:"Courier New"}
+img{image-rendering:pixelated}
+blink{animation:pg-blink 1s steps(1) infinite}
+@keyframes pg-blink{50%{visibility:hidden}}
+@media (prefers-reduced-motion:reduce){blink{animation:none}}
+[data-still]{display:none}@media (prefers-reduced-motion:reduce){marquee{display:none}[data-still]{display:block}}</style><html>
+<head>
+<title>Mika's corner</title>
+<meta name="viewport" content="width=device-width">
+</head>
+<body bgcolor="#10183a" text="#f0f0f0"
+  link="#ffcc33" vlink="#ff9966">
+<header>
+  <h1 style="display: flex; gap: 12px; color: #ffcc33">
+    <img src="pigeon.png" width="48" height="48" alt=""
+      loading="lazy">
+    Mika's corner
+  </h1>
+</header>
+<nav>
+  <a href="pigeon://mika/links">Links</a> |
+  <a href="pigeon://mika/guestbook">Guestbook</a>
+</nav>
+<div style="border-radius: 16px; box-shadow: 0 8px 24px #000;
+  background-color: #1c2a5c; padding: 12px">
+  <font face="Verdana" size="2">
+    <p>Welcome to my corner of the Pigeonweb!
+    <a href="javascript:like()">Like this page</a></p>
+    <picture><source srcset="pigeon.png"><img src="pigeon.png" alt="My pigeon"></picture>
+    <p><svg width="12" height="12"><circle cx="6" cy="6" r="6"/></svg>
+      Now playing: nothing</p>
+  </font>
+</div>
+<div style="position: fixed; bottom: 0; z-index: 9999;
+  background-color: #ffffff; color: #000000">
+  Sign up for my newsletter
+</div>
+<marquee scrollamount="3">
+  <font color="#66ff66">Under construction since 2003</font>
+</marquee><div data-still>
+  <font color="#66ff66">Under construction since 2003</font>
+</div>
+</body>
+</html>
+

@@ -13,3 +13,11 @@ run = "node scripts/vendor-icons.mjs"
 [tasks."fonts:vendor"]
 description = "Re-vendor and subset the pinned fonts from vendor/fonts.lock.json"
 run = "node scripts/vendor-fonts.mjs"
+
+[tasks."pigeonhtml:examples"]
+description = "Regenerate the PigeonHTML post's examples and sanitizer from a Pigeon checkout (PIGEON, default ../pigeon)"
+run = "node scripts/pigeonhtml-examples.mjs"
+
+[tasks."pigeonhtml:check"]
+description = "Fail if the PigeonHTML post's examples are out of date with the Pigeon checkout"
+run = "node scripts/pigeonhtml-examples.mjs --check"

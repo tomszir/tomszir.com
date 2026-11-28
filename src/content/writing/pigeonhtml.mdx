@@ -1,0 +1,192 @@
+---
+title: "PigeonHTML: a web stuck in 2003"
+description: Pages in HTML 4.01 and CSS 2.1 only, so they look like 2003 and run no scripts.
+published: 2026-11-28
+draft: false
+look: pigeon
+---
+
+import Diagram from '../../components/write-up/Diagram.astro'
+import ElementList from '../../components/write-up/pigeon/ElementList.astro'
+import ExplorerPage from '../../components/write-up/pigeon/ExplorerPage.astro'
+import Fonts from '../../components/write-up/pigeon/Fonts.astro'
+import Snippets from '../../components/write-up/pigeon/Snippets.astro'
+import TryIt from '../../components/write-up/pigeon/TryIt.astro'
+
+In [Pigeon](/writing/pigeon) it's 2003, so the web inside it should look like 2003 too. I could have drawn a retro theme over modern pages. Instead, a Pigeonweb page can only use what a browser understood back then: HTML 4.01 Transitional and CSS 2.1. I call it PigeonHTML.
+
+<ExplorerPage page="home" caption="Pigeon Home, the start page Explorer opens. A real PigeonHTML page, in the frame Pigeon shows it in." />
+
+Tables for layout, `<font>` for type, a `<marquee>` and a "best viewed 1024x768" button, all of it allowed. One rule does two jobs here. Pages look their age because nothing newer exists, and they're safe to show because scripts never existed in the first place.
+
+## What's allowed
+
+Every element meets one of three fates. The groups below cover every element in Pigeon's own lists.
+
+### Kept, tags and all
+
+<ElementList fate="kept" />
+
+### Tags dropped, text kept
+
+Anything else that isn't on the list, like these, loses its tags. What's inside stays, so a page written today still reads.
+
+<ElementList fate="unwrapped" />
+
+### Dropped with everything inside
+
+What these hold isn't text a page shows, so it goes with them.
+
+<ElementList fate="dropped" />
+
+### CSS
+
+CSS works the same way: CSS 2.1's properties, units and selectors, and nothing after them. Here's a stylesheet a page might bring today.
+
+<Snippets
+  rows={[
+    {
+      snippet: 'stylesheet',
+      notes: false,
+      text: 'Floats, borders, backgrounds, absolute layers and @media print all stay. Flexbox, rounded corners, shadows, transforms, calc(), var(), viewport units, @import, @font-face, :not() and media queries on width all go.',
+    },
+  ]}
+/>
+
+## A page from now, in 2003
+
+Here's Mika's homepage, written the way you'd write one today: a `<header>`, flexbox, rounded corners, a `<picture>`, an icon in SVG, a newsletter box pinned to the bottom of the screen. Pigeon takes out everything that isn't 2003.
+
+<Snippets
+  rows={[
+    {
+      snippet: 'mika',
+      text: 'Fourteen things go, and the validator points at each one by line and column. Here’s the page as a browser of today draws it, next to what Explorer shows:',
+    },
+  ]}
+/>
+
+<div class="explorer-pair">
+  <ExplorerPage page="mika-today" caption="As written, unsanitized, less the script a frame wouldn't run." height={300} />
+  <ExplorerPage page="mika" caption="What Explorer shows." height={300} />
+</div>
+
+What's left still works as a page. The navigation is plain links, the card lost its corners and its shadow, and the newsletter box is just a line at the bottom. Text survives almost everything: an element Pigeon doesn't know loses its tags and keeps what's inside. Only the things that aren't text go whole, like scripts, pictures and SVG.
+
+## How a page gets to the screen
+
+<Diagram
+  drawn="text"
+  caption="From a page's source to what Explorer shows, inside three layers that don't let a script run."
+  width={70}
+  height={22}
+  groups={[
+    { label: "Pigeon's tab: the site's policy", x: 0, y: 11, w: 70, h: 11 },
+    { label: "a frame that can't run scripts", x: 3, y: 12, w: 50, h: 9 },
+    { label: "policy: default-src 'none'", x: 6, y: 13, w: 44, h: 7 },
+  ]}
+  nodes={[
+    { id: 'page', label: 'A page', x: 22, y: 0, w: 24 },
+    { id: 'sanitize', label: 'sanitize()', x: 22, y: 6, w: 24 },
+    { id: 'framed', label: 'The sanitized page', x: 21, y: 15, w: 26 },
+    { id: 'explorer', label: 'Explorer', x: 56, y: 15, w: 12 },
+  ]}
+  edges={[
+    { step: 1, path: [[40, 3], [40, 5]], label: 'read by parse5', at: [42, 4] },
+    { step: 2, path: [[40, 9], [40, 14]], label: "only what's kept", at: [42, 10] },
+    { step: 3, path: [[47, 16], [55, 16]] },
+  ]}
+  steps={[
+    {
+      title: 'Read',
+      text: "parse5 reads the page the way the browser showing it will. A page over 100 KB isn't read at all, and a read that builds more than 50,000 elements stops.",
+      nodes: ['page', 'sanitize'],
+    },
+    {
+      title: 'Shown',
+      text: "Only what's on the lists is written back out, again and again until it reads back as itself. Explorer writes it into a frame with no doctype, so quirks mode, under a policy that loads nothing but the page's images and Pigeon's two fonts, in a frame that can't run scripts, in a tab whose own policy allows no inline script.",
+      nodes: ['sanitize', 'framed'],
+    },
+    {
+      title: 'Clicks',
+      text: "A click never moves the frame. Explorer cancels it, opens pigeon:// addresses itself and scrolls to #names, and its status bar says where a link goes.",
+      nodes: ['framed', 'explorer'],
+    },
+  ]}
+/>
+
+Explorer sanitizes every page before it shows it, even the ones that come with Pigeon. Those also have a test of their own: each must pass the validator, lose nothing to the sanitizer, fit the budget and only link to pages that exist. A script that got past the sanitizer would still have the three layers around the frame to get through, and none of them lets one run.
+
+## Tricks it has to catch
+
+Most of the sanitizer's work is in small cases, where a page says one thing and a browser reads another.
+
+### Addresses
+
+<Snippets
+  rows={[
+    { snippet: 'tab-in-scheme', text: 'A browser ignores the tab and reads javascript:, so Pigeon reads it the same way: controls, spaces and case don’t count.' },
+    { snippet: 'data-page', text: 'A data: address passes only as a GIF, JPEG or PNG image.' },
+    { snippet: 'data-image', text: 'This one is an image, so it stays.' },
+  ]}
+/>
+
+### Layers over Explorer
+
+<Snippets
+  rows={[
+    { snippet: 'fixed-layer', text: 'A layer pinned over the whole frame would catch every click. absolute and relative stay.' },
+    { snippet: 'high-layer', text: 'z-index stays between -100 and 100, so a page can’t climb over what Explorer draws on top of it.' },
+    { snippet: 'big-cursor', text: 'A cursor image can paint past the edge of the frame. url() only works in backgrounds, list styles and content.' },
+    { snippet: 'named-image', text: 'A named image turns into a property of the frame’s document, which Explorer reads.' },
+  ]}
+/>
+
+### How CSS is read
+
+<Snippets
+  rows={[
+    { snippet: 'comment-gap', text: 'Written back without the comment it would read as 100px, one token where the page wrote two.' },
+    { snippet: 'escaped-name', text: 'Escapes are decoded before anything is checked, the way a browser decodes them. This is position: fixed again.' },
+    { snippet: 'style-import', text: 'Every at-rule goes except @media for screen, print and all. The rest of the stylesheet stays.' },
+  ]}
+/>
+
+### Limits
+
+<Snippets
+  rows={[
+    { snippet: 'open-tags', text: 'Under 100 KB, but the browser reopens the 250 tags inside each of the 7,000 divs. Past 50,000 elements Pigeon gives up and shows nothing.' },
+  ]}
+/>
+
+## Try it
+
+Write a page, or paste one from today. This is Pigeon's own sanitizer, running in your browser, and the frame is drawn the way Explorer draws it.
+
+<TryIt
+  source={`<body bgcolor="#000080" text="#ffffff" link="#ffff00">
+  <center>
+    <font face="Verdana" size="5">Welcome to my homepage!</font>
+    <marquee>Under construction</marquee>
+    <p style="border-radius: 12px">Rounded corners came later.</p>
+    <a href="pigeon://help/">Pigeon Help</a>
+  </center>
+</body>`}
+/>
+
+## Fonts from the era
+
+A page can ask for the fonts everyone had in 2003. Pigeon ships two free clones and draws each name with one of them, so these are the faces a page gets.
+
+<Fonts />
+
+A name that isn't on either list is drawn in Tahoma. Images are GIF, JPEG or PNG, animated GIFs too, drawn with square pixels. And `<blink>` blinks again, unless you've asked your system for less motion.
+
+## Not there yet
+
+- **Your own pages.** For now the only pages are the ones that come with Pigeon. Hosting your own, mirrored by friends, is next.
+- **Widgets.** A visitor counter, a guestbook and a webring, written as comments like `<!--#include widget="counter" -->` and drawn by Explorer, so pages never need a script. The sanitizer drops them for now.
+- **Framesets and forms.** Each frame is another page to load and lock down, so they wait for hosted pages. Forms lose their tags and keep their text.
+
+These pages can sit a few pixels off from what Pigeon shows. Explorer writes a page into its frame itself, and here each page is a file of its own. Their marquees also stand still here if you've asked for less motion, which Pigeon doesn't do yet. The pages, their checks and the frame's rules are Pigeon's own.

@@ -1,0 +1,759 @@
+{
+  "pigeon": {
+    "commit": "23588bc",
+    "version": "1.0",
+    "budget": 102400
+  },
+  "pages": {
+    "home": {
+      "address": "pigeon://home",
+      "title": "Pigeon Home",
+      "bytes": 3805,
+      "status": "On this computer"
+    },
+    "mika": {
+      "address": "pigeon://mika",
+      "title": "Mika's corner",
+      "bytes": 1200,
+      "status": "Done"
+    },
+    "mika-today": {
+      "address": "pigeon://mika",
+      "title": "Mika's corner as written",
+      "bytes": 1200,
+      "status": "Not sanitized"
+    }
+  },
+  "elements": {
+    "kept": [
+      {
+        "label": "Document",
+        "names": [
+          "html",
+          "head",
+          "title",
+          "style",
+          "body"
+        ]
+      },
+      {
+        "label": "Blocks",
+        "names": [
+          "div",
+          "p",
+          "center",
+          "blockquote",
+          "address",
+          "pre",
+          "hr",
+          "br",
+          "wbr",
+          "nobr",
+          "fieldset",
+          "legend"
+        ]
+      },
+      {
+        "label": "Headings",
+        "names": [
+          "h1",
+          "h2",
+          "h3",
+          "h4",
+          "h5",
+          "h6"
+        ]
+      },
+      {
+        "label": "Type of the era",
+        "names": [
+          "font",
+          "basefont",
+          "big",
+          "small",
+          "tt",
+          "u",
+          "s",
+          "strike",
+          "blink",
+          "marquee"
+        ]
+      },
+      {
+        "label": "Text",
+        "names": [
+          "b",
+          "i",
+          "em",
+          "strong",
+          "cite",
+          "code",
+          "dfn",
+          "kbd",
+          "samp",
+          "var",
+          "abbr",
+          "acronym",
+          "q",
+          "sub",
+          "sup",
+          "span",
+          "del",
+          "ins",
+          "bdo"
+        ]
+      },
+      {
+        "label": "Links and images",
+        "names": [
+          "a",
+          "img",
+          "map",
+          "area"
+        ]
+      },
+      {
+        "label": "Lists",
+        "names": [
+          "ul",
+          "ol",
+          "li",
+          "dl",
+          "dt",
+          "dd",
+          "dir",
+          "menu"
+        ]
+      },
+      {
+        "label": "Tables",
+        "names": [
+          "table",
+          "caption",
+          "colgroup",
+          "col",
+          "thead",
+          "tbody",
+          "tfoot",
+          "tr",
+          "th",
+          "td"
+        ]
+      }
+    ],
+    "unwrapped": [
+      {
+        "label": "Sections",
+        "names": [
+          "header",
+          "footer",
+          "main",
+          "nav",
+          "article",
+          "aside",
+          "section",
+          "figure",
+          "figcaption"
+        ]
+      },
+      {
+        "label": "Inline",
+        "names": [
+          "mark",
+          "time",
+          "meter",
+          "progress",
+          "output"
+        ]
+      },
+      {
+        "label": "Widgets",
+        "names": [
+          "details",
+          "summary",
+          "dialog"
+        ]
+      },
+      {
+        "label": "Forms",
+        "names": [
+          "form",
+          "button",
+          "label"
+        ]
+      }
+    ],
+    "dropped": [
+      {
+        "label": "Scripts",
+        "names": [
+          "script",
+          "noscript",
+          "template"
+        ]
+      },
+      {
+        "label": "Other documents",
+        "names": [
+          "iframe",
+          "frame",
+          "frameset",
+          "noframes",
+          "object",
+          "embed",
+          "applet",
+          "param",
+          "portal"
+        ]
+      },
+      {
+        "label": "Media",
+        "names": [
+          "audio",
+          "video",
+          "source",
+          "track",
+          "picture",
+          "canvas"
+        ]
+      },
+      {
+        "label": "Form controls",
+        "names": [
+          "input",
+          "select",
+          "option",
+          "optgroup",
+          "textarea",
+          "datalist",
+          "keygen",
+          "isindex"
+        ]
+      },
+      {
+        "label": "Metadata",
+        "names": [
+          "base",
+          "link",
+          "meta"
+        ]
+      },
+      {
+        "label": "Raw text",
+        "names": [
+          "xmp",
+          "listing",
+          "plaintext",
+          "noembed"
+        ]
+      },
+      {
+        "label": "Foreign",
+        "names": [
+          "svg",
+          "math"
+        ]
+      }
+    ]
+  },
+  "snippets": {
+    "mika": {
+      "source": "<html>\n<head>\n<title>Mika's corner</title>\n<meta name=\"viewport\" content=\"width=device-width\">\n<script src=\"analytics.js\"></script>\n</head>\n<body bgcolor=\"#10183a\" text=\"#f0f0f0\"\n  link=\"#ffcc33\" vlink=\"#ff9966\">\n<header>\n  <h1 style=\"display: flex; gap: 12px; color: #ffcc33\">\n    <img src=\"pigeon.png\" width=\"48\" height=\"48\" alt=\"\"\n      loading=\"lazy\">\n    Mika's corner\n  </h1>\n</header>\n<nav>\n  <a href=\"pigeon://mika/links\">Links</a> |\n  <a href=\"pigeon://mika/guestbook\">Guestbook</a>\n</nav>\n<div style=\"border-radius: 16px; box-shadow: 0 8px 24px #000;\n  background-color: #1c2a5c; padding: 12px\">\n  <font face=\"Verdana\" size=\"2\">\n    <p>Welcome to my corner of the Pigeonweb!\n    <a href=\"javascript:like()\">Like this page</a></p>\n    <picture><source srcset=\"pigeon.png\"><img src=\"pigeon.png\" alt=\"My pigeon\"></picture>\n    <p><svg width=\"12\" height=\"12\"><circle cx=\"6\" cy=\"6\" r=\"6\"/></svg>\n      Now playing: nothing</p>\n  </font>\n</div>\n<div style=\"position: fixed; bottom: 0; z-index: 9999;\n  background-color: #ffffff; color: #000000\">\n  Sign up for my newsletter\n</div>\n<marquee scrollamount=\"3\">\n  <font color=\"#66ff66\">Under construction since 2003</font>\n</marquee>\n</body>\n</html>\n",
+      "marks": [
+        {
+          "line": 4,
+          "column": 1,
+          "text": "<meta name=\"viewport\" content=\"width=device-width\">",
+          "label": "<meta>"
+        },
+        {
+          "line": 5,
+          "column": 1,
+          "text": "<script src=\"analytics.js\"></script>",
+          "label": "<script>"
+        },
+        {
+          "line": 9,
+          "column": 1,
+          "text": "<header>",
+          "label": "<header>"
+        },
+        {
+          "line": 10,
+          "column": 14,
+          "text": "display: flex;",
+          "label": "display"
+        },
+        {
+          "line": 10,
+          "column": 29,
+          "text": "gap: 12px;",
+          "label": "gap"
+        },
+        {
+          "line": 12,
+          "column": 7,
+          "text": "loading=\"lazy\"",
+          "label": "loading attribute"
+        },
+        {
+          "line": 16,
+          "column": 1,
+          "text": "<nav>",
+          "label": "<nav>"
+        },
+        {
+          "line": 20,
+          "column": 13,
+          "text": "border-radius: 16px;",
+          "label": "border-radius"
+        },
+        {
+          "line": 20,
+          "column": 34,
+          "text": "box-shadow: 0 8px 24px #000;",
+          "label": "box-shadow"
+        },
+        {
+          "line": 24,
+          "column": 14,
+          "text": "javascript:like()",
+          "label": "the address"
+        },
+        {
+          "line": 25,
+          "column": 5,
+          "text": "<picture><source srcset=\"pigeon.png\"><img src=\"pigeon.png\" alt=\"My pigeon\"></picture>",
+          "label": "<picture>"
+        },
+        {
+          "line": 26,
+          "column": 8,
+          "text": "<svg width=\"12\" height=\"12\"><circle cx=\"6\" cy=\"6\" r=\"6\"/></svg>",
+          "label": "<svg>"
+        },
+        {
+          "line": 30,
+          "column": 13,
+          "text": "position: fixed;",
+          "label": "position"
+        },
+        {
+          "line": 30,
+          "column": 41,
+          "text": "z-index: 9999;",
+          "label": "z-index"
+        }
+      ],
+      "removed": [
+        {
+          "what": "element",
+          "name": "meta"
+        },
+        {
+          "what": "element",
+          "name": "script"
+        },
+        {
+          "what": "element",
+          "name": "header"
+        },
+        {
+          "what": "property",
+          "name": "display"
+        },
+        {
+          "what": "property",
+          "name": "gap"
+        },
+        {
+          "what": "attribute",
+          "name": "loading"
+        },
+        {
+          "what": "element",
+          "name": "nav"
+        },
+        {
+          "what": "property",
+          "name": "border-radius"
+        },
+        {
+          "what": "property",
+          "name": "box-shadow"
+        },
+        {
+          "what": "url",
+          "name": "javascript:like()"
+        },
+        {
+          "what": "element",
+          "name": "picture"
+        },
+        {
+          "what": "element",
+          "name": "svg"
+        },
+        {
+          "what": "property",
+          "name": "position"
+        },
+        {
+          "what": "property",
+          "name": "z-index"
+        }
+      ]
+    },
+    "tab-in-scheme": {
+      "source": "<a href=\"java&#x09;script:steal()\">\n  Free smileys\n</a>",
+      "marks": [
+        {
+          "line": 1,
+          "column": 10,
+          "text": "java&#x09;script:steal()",
+          "label": "the address"
+        }
+      ],
+      "removed": [
+        {
+          "what": "url",
+          "name": "java\tscript:steal()"
+        }
+      ]
+    },
+    "data-page": {
+      "source": "<a href=\"data:text/html,&lt;script&gt;steal()&lt;/script&gt;\">\n  My page\n</a>",
+      "marks": [
+        {
+          "line": 1,
+          "column": 10,
+          "text": "data:text/html,&lt;script&gt;steal()&lt;/script&gt;",
+          "label": "the address"
+        }
+      ],
+      "removed": [
+        {
+          "what": "url",
+          "name": "data:text/html,<script>steal()</script>"
+        }
+      ]
+    },
+    "data-image": {
+      "source": "<img src=\"data:image/gif;base64,R0lGODlhAQABAAAAACw=\"\n  alt=\"\">",
+      "marks": [],
+      "removed": []
+    },
+    "fixed-layer": {
+      "source": "<div style=\"position: fixed;\n  top: 0; left: 0;\n  width: 100%; height: 100%\">",
+      "marks": [
+        {
+          "line": 1,
+          "column": 13,
+          "text": "position: fixed;",
+          "label": "position"
+        }
+      ],
+      "removed": [
+        {
+          "what": "property",
+          "name": "position"
+        }
+      ]
+    },
+    "high-layer": {
+      "source": "<div style=\"position: absolute;\n  z-index: 2147483647\">",
+      "marks": [
+        {
+          "line": 2,
+          "column": 3,
+          "text": "z-index: 2147483647",
+          "label": "z-index"
+        }
+      ],
+      "removed": [
+        {
+          "what": "property",
+          "name": "z-index"
+        }
+      ]
+    },
+    "big-cursor": {
+      "source": "<p style=\"cursor: url(huge.png), auto\">",
+      "marks": [
+        {
+          "line": 1,
+          "column": 11,
+          "text": "cursor: url(huge.png), auto",
+          "label": "cursor"
+        }
+      ],
+      "removed": [
+        {
+          "what": "property",
+          "name": "cursor"
+        }
+      ]
+    },
+    "named-image": {
+      "source": "<img src=\"pigeon.png\"\n  name=\"cookie\" alt=\"\">",
+      "marks": [
+        {
+          "line": 2,
+          "column": 3,
+          "text": "name=\"cookie\"",
+          "label": "name attribute"
+        }
+      ],
+      "removed": [
+        {
+          "what": "attribute",
+          "name": "name"
+        }
+      ]
+    },
+    "comment-gap": {
+      "source": "<p style=\"width: 100/**/px\">",
+      "marks": [
+        {
+          "line": 1,
+          "column": 11,
+          "text": "width: 100/**/px",
+          "label": "width"
+        }
+      ],
+      "removed": [
+        {
+          "what": "property",
+          "name": "width"
+        }
+      ]
+    },
+    "escaped-name": {
+      "source": "<p style=\"\\70 osition: fixed\">",
+      "marks": [
+        {
+          "line": 1,
+          "column": 11,
+          "text": "\\70 osition: fixed",
+          "label": "position"
+        }
+      ],
+      "removed": [
+        {
+          "what": "property",
+          "name": "position"
+        }
+      ]
+    },
+    "style-import": {
+      "source": "<style>\n  @import url(theme.css);\n  p { color: red }\n</style>",
+      "marks": [
+        {
+          "line": 2,
+          "column": 3,
+          "text": "@import url(theme.css);",
+          "label": "@import"
+        }
+      ],
+      "removed": [
+        {
+          "what": "property",
+          "name": "@import"
+        }
+      ]
+    },
+    "stylesheet": {
+      "source": "<style>\n  @import url(theme.css);\n  @font-face { font-family: Comic; src: url(comic.ttf) }\n  body {\n    background: #10183a url(pigeon.png);\n    color: #f0f0f0;\n    font: 13px Verdana;\n  }\n  a:hover { color: #ffcc33; text-decoration: underline }\n  .nav li { display: inline; list-style-type: square }\n  .card {\n    float: left;\n    width: 200px;\n    padding: 12px;\n    border: 2px outset #c0c0c0;\n    border-radius: 16px;\n    box-shadow: 0 8px 24px #000;\n    display: flex;\n    gap: 12px;\n    width: calc(100% - 2em);\n  }\n  .card img { position: absolute; z-index: 10 }\n  .card:hover {\n    cursor: pointer;\n    transform: rotate(3deg);\n    transition: transform 0.2s;\n    opacity: 0.5;\n  }\n  .newsletter { position: fixed; bottom: 0; z-index: 9999; }\n  .title { color: var(--brand); width: 100vw; }\n  p:not(.intro) { color: red }\n  @media (min-width: 600px) { .card { float: none } }\n  @media print { .newsletter { display: none } }\n</style>",
+      "marks": [
+        {
+          "line": 2,
+          "column": 3,
+          "text": "@import url(theme.css);",
+          "label": "@import"
+        },
+        {
+          "line": 3,
+          "column": 3,
+          "text": "@font-face { font-family: Comic; src: url(comic.ttf) }",
+          "label": "@font-face"
+        },
+        {
+          "line": 16,
+          "column": 5,
+          "text": "border-radius: 16px;",
+          "label": "border-radius"
+        },
+        {
+          "line": 17,
+          "column": 5,
+          "text": "box-shadow: 0 8px 24px #000;",
+          "label": "box-shadow"
+        },
+        {
+          "line": 18,
+          "column": 5,
+          "text": "display: flex;",
+          "label": "display"
+        },
+        {
+          "line": 19,
+          "column": 5,
+          "text": "gap: 12px;",
+          "label": "gap"
+        },
+        {
+          "line": 20,
+          "column": 5,
+          "text": "width: calc(100% - 2em);",
+          "label": "width"
+        },
+        {
+          "line": 25,
+          "column": 5,
+          "text": "transform: rotate(3deg);",
+          "label": "transform"
+        },
+        {
+          "line": 26,
+          "column": 5,
+          "text": "transition: transform 0.2s;",
+          "label": "transition"
+        },
+        {
+          "line": 27,
+          "column": 5,
+          "text": "opacity: 0.5;",
+          "label": "opacity"
+        },
+        {
+          "line": 29,
+          "column": 17,
+          "text": "position: fixed;",
+          "label": "position"
+        },
+        {
+          "line": 29,
+          "column": 45,
+          "text": "z-index: 9999;",
+          "label": "z-index"
+        },
+        {
+          "line": 30,
+          "column": 12,
+          "text": "color: var(--brand);",
+          "label": "color"
+        },
+        {
+          "line": 30,
+          "column": 33,
+          "text": "width: 100vw;",
+          "label": "width"
+        },
+        {
+          "line": 31,
+          "column": 3,
+          "text": "p:not(.intro) { color: red }",
+          "label": "the rule"
+        },
+        {
+          "line": 32,
+          "column": 3,
+          "text": "@media (min-width: 600px) { .card { float: none } }",
+          "label": "@media"
+        }
+      ],
+      "removed": [
+        {
+          "what": "property",
+          "name": "@import"
+        },
+        {
+          "what": "property",
+          "name": "@font-face"
+        },
+        {
+          "what": "property",
+          "name": "border-radius"
+        },
+        {
+          "what": "property",
+          "name": "box-shadow"
+        },
+        {
+          "what": "property",
+          "name": "display"
+        },
+        {
+          "what": "property",
+          "name": "gap"
+        },
+        {
+          "what": "property",
+          "name": "width"
+        },
+        {
+          "what": "property",
+          "name": "transform"
+        },
+        {
+          "what": "property",
+          "name": "transition"
+        },
+        {
+          "what": "property",
+          "name": "opacity"
+        },
+        {
+          "what": "property",
+          "name": "position"
+        },
+        {
+          "what": "property",
+          "name": "z-index"
+        },
+        {
+          "what": "property",
+          "name": "color"
+        },
+        {
+          "what": "property",
+          "name": "width"
+        },
+        {
+          "what": "property",
+          "name": "selector"
+        },
+        {
+          "what": "property",
+          "name": "@media"
+        }
+      ]
+    },
+    "open-tags": {
+      "source": "<div>\n  <b id=0><b id=1> … <b id=249>\n</div>\n<div>x</div> × 7,000",
+      "marks": [],
+      "removed": [
+        {
+          "what": "element",
+          "name": "#document"
+        }
+      ]
+    }
+  },
+  "fonts": {
+    "sans": [
+      "Tahoma",
+      "Verdana",
+      "Arial",
+      "Helvetica",
+      "Geneva",
+      "Trebuchet MS"
+    ],
+    "mono": [
+      "Courier New",
+      "Courier",
+      "Lucida Console",
+      "Monaco"
+    ]
+  }
+}

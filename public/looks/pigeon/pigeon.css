@@ -285,3 +285,155 @@
 :root .prose a::after {
   content: none;
 }
+
+/* The Pigeon blocks in XP's dress: Explorer's address and status bars on the window's face, the
+   page, the source and the fonts in sunken fields. */
+:root .prose .explorer-window {
+  border: 1px solid var(--xp-sunken-edge);
+  border-radius: 0;
+  background: var(--xp-body);
+}
+
+:root .prose .explorer-address {
+  border-bottom: 1px solid var(--xp-header-edge);
+  background: var(--xp-header);
+  font-family: 'Pigeon Tahoma', Tahoma, sans-serif;
+}
+
+:root .prose .explorer-url {
+  border: 1px solid var(--xp-sunken-edge);
+  border-radius: 0;
+  background: var(--xp-sunken);
+  color: var(--xp-text);
+}
+
+:root .prose .explorer-status {
+  border-top: 1px solid var(--xp-sunken-edge);
+  background: var(--xp-status);
+  color: var(--xp-text);
+  font-family: 'Pigeon Tahoma', Tahoma, sans-serif;
+}
+
+/* Code in a sunken field, like Notepad's, with XP's button to copy it. The site's prose styles
+   set the block's ground with !important from --panel, so the field's colour goes in through it. */
+:root .prose pre {
+  --panel: var(--xp-sunken);
+  border: 1px solid var(--xp-sunken-edge);
+  border-radius: 0;
+}
+
+:root .prose .code .copy {
+  top: 6px;
+  right: 6px;
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--xp-button-edge);
+  border-radius: 0;
+  background: var(--xp-button);
+  color: var(--xp-text);
+  font:
+    400 12px 'Pigeon Tahoma',
+    Tahoma,
+    sans-serif;
+}
+
+:root .prose .code .copy:hover {
+  background: var(--xp-button);
+  box-shadow: var(--xp-button-hover);
+}
+
+:root .prose .code .copy:active {
+  background: var(--xp-button-pressed);
+  box-shadow: none;
+}
+
+:root .prose .code .copy:focus-visible {
+  outline: 1px dotted var(--xp-text);
+  outline-offset: -4px;
+  box-shadow: var(--xp-button-focus);
+}
+
+:root .prose .snippets > li::marker {
+  content: none;
+}
+
+:root .prose .fonts > li::marker {
+  content: none;
+}
+
+:root .prose .font {
+  border: 1px solid var(--xp-sunken-edge);
+  border-radius: 0;
+  background: var(--xp-sunken);
+}
+
+/* The editor in a sunken field with XP's yellow tooltips, and the badge Pigeon's docs plan for a valid page, in the
+   manner of 2003's "Valid HTML 4.01!". */
+:root .prose .cm-editor.code-editor {
+  border: 1px solid var(--xp-sunken-edge);
+  border-radius: 0;
+  background: var(--xp-sunken);
+  color: var(--xp-text);
+}
+
+:root .prose .code-editor .cm-gutters {
+  border-right: 1px solid var(--xp-header-edge);
+  border-radius: 0;
+  background: var(--xp-body);
+}
+
+:root .prose .code-editor .cm-tooltip {
+  border: 1px solid var(--xp-text);
+  border-radius: 0;
+  background: #ffffe1;
+  color: #000000;
+  font:
+    12px 'Pigeon Tahoma',
+    Tahoma,
+    sans-serif;
+}
+
+:root .prose .try-verdict[data-valid] {
+  justify-self: start;
+  padding: 3px 10px;
+  border: 1px solid var(--xp-link);
+  background: var(--xp-sunken);
+  color: var(--xp-link);
+  font:
+    700 12px Verdana,
+    'Pigeon Tahoma',
+    sans-serif;
+}
+
+:root .prose .try-problems li::marker {
+  content: none;
+}
+
+:root .prose .try-format {
+  min-height: 26px;
+  padding: 0 12px;
+  border: 1px solid var(--xp-button-edge);
+  border-radius: 0;
+  background: var(--xp-button);
+  color: var(--xp-text);
+  font:
+    400 12px 'Pigeon Tahoma',
+    Tahoma,
+    sans-serif;
+}
+
+:root .prose .try-format:hover {
+  background: var(--xp-button);
+  box-shadow: var(--xp-button-hover);
+}
+
+:root .prose .try-format:active {
+  background: var(--xp-button-pressed);
+  box-shadow: none;
+}
+
+:root .prose .try-format:focus-visible {
+  outline: 1px dotted var(--xp-text);
+  outline-offset: -4px;
+  box-shadow: var(--xp-button-focus);
+}

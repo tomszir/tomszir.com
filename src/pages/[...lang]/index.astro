@@ -15,6 +15,8 @@ export const getStaticPaths = langPaths
 const lang = langOf(Astro.url.pathname)
 const text = t(lang)
 const [posts, products] = await Promise.all([getPosts(), getProducts()])
+// Two, not three: each post's title and description count against the 14 KB budget.
+const latestPosts = 2
 const [latest] = posts
 const [main, side] = products
 const { availability } = site
@@ -139,11 +141,11 @@ const { availability } = site
     <section class="section" aria-labelledby="writing">
       <h2 id="writing" class="section-label">{text.nav.writing}</h2>
       <div class="writing">
-        <PostList posts={posts.slice(0, 3)} />
+        <PostList posts={posts.slice(0, latestPosts)} />
         {
           posts.length > 0 && (
             <a class="back all" href={localePath(lang, '/writing')}>
-              {posts.length > 3 ? `${text.allWriting} (${posts.length})` : text.allWriting}
+              {posts.length > latestPosts ? `${text.allWriting} (${posts.length})` : text.allWriting}
               <Icon name="arrow-right" />
             </a>
           )

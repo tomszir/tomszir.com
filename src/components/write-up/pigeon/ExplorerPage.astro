@@ -1,0 +1,43 @@
+---
+/**
+ * A PigeonHTML page as Pigeon Explorer shows it: the page's own file from
+ * `public/looks/pigeon/pages/`, written by scripts/pigeonhtml-examples.mjs the way Explorer writes
+ * a frame (no doctype, its own policy, Pigeon's base stylesheet), in a frame that may not run
+ * scripts, under an address bar and a status bar saying what Explorer says, and its size against
+ * the budget. A frame that can't run scripts runs no listeners either, not even its parent's, so
+ * Explorer's part (a link's address in the status bar) isn't drawn; a click on a pigeon:// link
+ * goes nowhere, since the frame may not open other schemes. Styled in prose.css and the Pigeon look.
+ */
+import examples from '../../../content/pigeonhtml/examples.json'
+
+interface Props {
+  page: keyof typeof examples.pages
+  caption: string
+  height?: number
+}
+
+const { page, caption, height = 440 } = Astro.props
+const { address, title, bytes, status } = examples.pages[page]
+const src = `/looks/pigeon/pages/${page}.html`
+---
+
+<figure class="explorer">
+  <div class="explorer-window">
+    <p class="explorer-address">
+      <span class="explorer-label">Address</span>
+      <span class="explorer-url">{address}</span>
+    </p>
+    <iframe
+      class="explorer-view"
+      src={src}
+      title={`${title}, as Pigeon Explorer shows it`}
+      sandbox="allow-same-origin"
+      loading="lazy"
+      height={height}></iframe>
+    <p class="explorer-status">
+      <span>{status}</span>
+      <span>{(bytes / 1024).toFixed(1)} KB of {examples.pigeon.budget / 1024} KB</span>
+    </p>
+  </div>
+  <figcaption>{caption} <a href={src}>Open the page on its own</a>.</figcaption>
+</figure>
